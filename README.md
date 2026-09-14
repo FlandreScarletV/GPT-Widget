@@ -33,8 +33,9 @@
 - 说是 IP 风险，其实更像是IP质量检测。即使 IP 质量较差，也不代表账号一定存在问题；IP质量正常也不能证明账号不存在其他风险。
 
 <div align="center">
-  <img width="936" alt="f6be3a545ef427a7505767d58d91a6de" src="https://github.com/user-attachments/assets/1a733722-c1c0-4699-809b-ac687fb17a04" />
+  <img width="1169" alt="c9ad4e99ede22fd0da66a04ed722bb6c" src="https://github.com/user-attachments/assets/2b374302-359b-407c-a7f6-c605fa0d5ed9" />
 </div>
+
 
 
 
