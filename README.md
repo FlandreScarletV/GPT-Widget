@@ -1,5 +1,6 @@
 ﻿## 这个是什么？有什么用？
 - 就是一个非常轻量化的，并且可以在你的~~ ChatGPT 桌面端 ~~显示当前正在使用的模型、思考程度、是否被重路由成其他模型、IP信息和IP质量的小组件。不过不是直接修改的ChatGPT前端。对你的账号、ChatGPT 桌面端软件没有太大的风险。
+
 <div align="center">
   <img width="864" alt="d0fe3bc6319d468e67499d8f668d99b7" src="https://github.com/user-attachments/assets/bd5a7ec5-640d-4030-a281-60b7a3ec2829" />
 </div>
@@ -26,13 +27,16 @@
 
 - IP 风险的评判等级并不是判断账号是否被官方风控，或者容易被重路由模型的唯一标准，关键还是看上游模型。
 
-说是 IP 风险，其实更像是IP质量检测。即使 IP 质量较差，也不代表账号一定存在问题；IP质量正常也不能证明账号不存在其他风险。
+- IP 可能会因为网络、API 服务状态或免费额度耗尽而暂时失败。
+  IP 检测失败并不会影响 Codex 本身的正常使用。
+  
+- 说是 IP 风险，其实更像是IP质量检测。即使 IP 质量较差，也不代表账号一定存在问题；IP质量正常也不能证明账号不存在其他风险。
+
 <div align="center">
   <img width="936" alt="f6be3a545ef427a7505767d58d91a6de" src="https://github.com/user-attachments/assets/1a733722-c1c0-4699-809b-ac687fb17a04" />
 </div>
 
-- IP 可能会因为网络、API 服务状态或免费额度耗尽而暂时失败。
-  IP 检测失败并不会影响 Codex 本身的正常使用。
+
 
 ## 卸载
 
