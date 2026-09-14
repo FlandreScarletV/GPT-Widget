@@ -27,6 +27,9 @@
 - IP 风险的评判等级并不是判断账号是否被官方风控，或者容易被重路由模型的唯一标准，关键还是看上游模型。
 
 说是 IP 风险，其实更像是IP质量检测。即使 IP 质量较差，也不代表账号一定存在问题；IP质量正常也不能证明账号不存在其他风险。
+<div align="center">
+  <img width="936" alt="f6be3a545ef427a7505767d58d91a6de" src="https://github.com/user-attachments/assets/1a733722-c1c0-4699-809b-ac687fb17a04" />
+</div>
 
 - IP 可能会因为网络、API 服务状态或免费额度耗尽而暂时失败。
   IP 检测失败并不会影响 Codex 本身的正常使用。
