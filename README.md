@@ -1,5 +1,5 @@
 ﻿## 这个是什么？有什么用？
-- 就是一个非常轻量化的，并且可以在你的~~ ChatGPT 桌面端 ~~显示当前正在使用的模型、思考程度、是否被重路由成其他模型、IP信息和IP质量的小组件。不过不是直接修改的ChatGPT前端。对你的账号、ChatGPT 桌面端软件没有太大的风险。
+- 就是一个非常轻量化的，并且可以在你的~~ChatGPT 桌面端~~显示当前正在使用的模型、思考程度、是否被重路由成其他模型、IP信息和IP质量的小组件。不过不是直接修改的ChatGPT前端。对你的账号、ChatGPT 桌面端软件没有太大的风险。
 
 <div align="center">
   <img width="864" alt="d0fe3bc6319d468e67499d8f668d99b7" src="https://github.com/user-attachments/assets/bd5a7ec5-640d-4030-a281-60b7a3ec2829" />
