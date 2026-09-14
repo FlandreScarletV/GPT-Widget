@@ -32,13 +32,6 @@
   
 - 说是 IP 风险，其实更像是IP质量检测。即使 IP 质量较差，也不代表账号一定存在问题；IP质量正常也不能证明账号不存在其他风险。
 
-<div align="center">
-  <img width="1169" alt="c9ad4e99ede22fd0da66a04ed722bb6c" src="https://github.com/user-attachments/assets/2b374302-359b-407c-a7f6-c605fa0d5ed9" />
-</div>
-
-
-
-
 ## 卸载
 
 - 完全退出副本软件后，删除副本软件及配置目录`GPTWidget`文件夹即可。无需重新安装ChatGPT，不会删除你原有的任何数据。清理仍会保留你的API密钥。
