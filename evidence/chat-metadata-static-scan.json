@@ -1,0 +1,276 @@
+[
+  {
+    "label": "official",
+    "file": "C:/Program Files/WindowsApps/OpenAI.Codex_26.911.7940.0_x64__2p2nqsd0c76g0/app/resources/app.asar",
+    "sha256": "74e7aaf2c112f84ef68a7846d10d1411403e72763f7e93fe046df2f264adf6e0",
+    "hits": [
+      {
+        "asset": ".vite/build/main-CkwLGrvo.js",
+        "term": "model/rerouted",
+        "count": 2,
+        "snippets": [
+          {
+            "offset": 992956,
+            "code": "r,e=>{tS(e),Y_e(e.hookRuns??=[],i)},t.method===`hook/started`?{rebindLatestInProgressPlaceholder:!0}:void 0);break}case`model/rerouted`:{let{threadId:e,turnId:r,fromModel:i,toModel:a,reason:c}=t.params;o.updateTurnState(n.qu(e),r,e=>{e.items.push({id:s(),type:`modelRerouted`,fromModel:i,toModel:a,reason:c})});break}case`error`:{let{error:e,willRetry:r,threadId:i,turnId:a}=t.params;o.updateTurnState(n.qu(i),a,t=>{t.items.push({id:s(),type:`error`,message:e.message,wi"
+          },
+          {
+            "offset": 995322,
+            "code": "/started`:case`turn/completed`:case`turn/diff/updated`:case`turn/plan/updated`:case`model/safetyBuffering/updated`:case`model/rerouted`:case`hook/started`:case`hook/completed`:case`error`:if($_e(e,o,s,a)===`deferred`)return;break;case`item/started`:case`item/completed`:case`item/autoApprovalReview/started`:case`item/autoApprovalReview/completed`:case`autoApprovalReview/strictReviewRequired`:case`guardianWarning`:case`item/agentMessage/delta`:case`item/plan/delta`:ca"
+          }
+        ]
+      },
+      {
+        "asset": ".vite/build/src-BiETdQsO.js",
+        "term": "model/rerouted",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 444543,
+            "code": ":!0,configWarning:!0,\"windows/worldWritableWarning\":!1,\"windowsSandbox/setupCompleted\":!0,\"account/login/completed\":!0,\"model/rerouted\":!0,\"model/verification\":!0,\"modelProvider/authRecoveryStarted\":!1,\"modelProvider/authRecoveryCompleted\":!1,\"model/safetyBuffering/updated\":!0,\"turn/moderationMetadata\":!1,authStatusChange:!1,loginChatGptComplete:!1,sessionConfigured:!0,\"codex/event/session_configured\":!0,\"codex/event/task_started\":!1,\"codex/event/agent_reasoning\":!1"
+          }
+        ]
+      },
+      {
+        "asset": ".vite/build/worker.js",
+        "term": "model/rerouted",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 898936,
+            "code": ":!0,configWarning:!0,\"windows/worldWritableWarning\":!1,\"windowsSandbox/setupCompleted\":!0,\"account/login/completed\":!0,\"model/rerouted\":!0,\"model/verification\":!0,\"modelProvider/authRecoveryStarted\":!1,\"modelProvider/authRecoveryCompleted\":!1,\"model/safetyBuffering/updated\":!0,\"turn/moderationMetadata\":!1,authStatusChange:!1,loginChatGptComplete:!1,sessionConfigured:!0,\"codex/event/session_configured\":!0,\"codex/event/task_started\":!1,\"codex/event/agent_reasoning\":!1"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-9aa16c63159e.js",
+        "term": "server_ste_metadata",
+        "count": 4,
+        "snippets": [
+          {
+            "offset": 4221927,
+            "code": "perf_stats`:{let t=yHr.safeParse(e);return t.success?{conversationId:null,perfStats:t.data,type:`perf-stats`}:null}case`server_ste_metadata`:{let t=bHr.safeParse(e);return t.success?{conversationId:t.data.conversation_id,serverSteMetadata:t.data,type:`server-ste-metadata`}:null}case`message_marker`:{let t=xHr.safeParse(e);return t.success?{conversationId:t.data.conversation_id,messageMarker:t.data,type:`message-marker`}:null}case`moderation`:{let t=CHr.safeParse(e);"
+          },
+          {
+            "offset": 4224688,
+            "code": "onal(),type:J(`conversation_async_status`)}).loose(),yHr=of(e=>tI(e)&&e.type===`perf_stats`),bHr=of(e=>tI(e)&&e.type===`server_ste_metadata`&&typeof e.conversation_id==`string`&&tI(e.metadata)),xHr=of(e=>tI(e)&&e.type===`message_marker`&&typeof e.conversation_id==`string`&&typeof e.message_id==`string`&&uHr(e.marker)&&(e.event===`first`||e.event===`last`)),SHr=q({title:G(),details:G(),feedback_prompt:G().nullable().optional()}),CHr=q({conversation_id:G(),moderation_"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-9aa16c63159e.js",
+        "term": "case`server-ste-metadata`",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 5146334,
+            "code": "y),o.conversationId!==d&&wvi(e,o.conversationId,o.domain,o.structuredCopy);break;case`safety-review`:T4r(e,d,c,o);break;case`server-ste-metadata`:B.serverConversationId=o.serverSteMetadata.conversation_id,B.serverMetadata=o.serverSteMetadata.metadata;break;case`title`:V4r({scope:e,conversationId:d,onlyIfProvisional:!0,title:o.title});break;case`toast`:e.get(GS)[o.level](o.message,o.toastId==null?void 0:{id:o.toastId});break}},onTiming:e=>{re?.onRequestTiming(e)},onR"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-9aa16c63159e.js",
+        "term": "/f/conversation",
+        "count": 5,
+        "snippets": [
+          {
+            "offset": 3260842,
+            "code": ":Uzn(JSON.stringify(t.jsonError))}:{}}}function Hzn(e){return e?e.includes(`/conversation/resume`)?`resume`:e.includes(`/f/conversation`)?`send`:`unknown`:`unknown`}function Uzn(e){return e.length<=2e3?e:`${e.slice(0,2e3)}…`}function Wzn(e){if(e instanceof Error)return Gzn(e);if(e!=null)return{name:typeof e,message:Uzn(String(e))}}function Gzn(e){return{name:e.name,message:Uzn(e.message),stack:e.stack?Uzn(e.stack):void 0}}function Kzn(e){if(typeof navigator<`u`&&!na"
+          },
+          {
+            "offset": 4249916,
+            "code": ",app_attest_challenge:e.appAttestChallenge}),C={...y,streamRequestId:``},w=AF();return C.streamRequestId=iF.streamPost(`/f/conversation`,{additionalHeaders:y.headers,retry:r==null?void 0:{getDelayMs:r,refreshRequest:async e=>{let t=await hWr(e);if(e.throwIfAborted(),t.chatRequirements.force_login)throw new bw(`force_login during retry`,403,`force_login`,null);return{headers:{...aLr(),...sI(),...lI({conduitToken:y.headers[`x-conduit-token`],integrityHeaders:t.headers"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-9aa16c63159e.js",
+        "term": "model/rerouted",
+        "count": 3,
+        "snippets": [
+          {
+            "offset": 2078690,
+            "code": ":!0,configWarning:!0,\"windows/worldWritableWarning\":!1,\"windowsSandbox/setupCompleted\":!0,\"account/login/completed\":!0,\"model/rerouted\":!0,\"model/verification\":!0,\"modelProvider/authRecoveryStarted\":!1,\"modelProvider/authRecoveryCompleted\":!1,\"model/safetyBuffering/updated\":!0,\"turn/moderationMetadata\":!1,authStatusChange:!1,loginChatGptComplete:!1,sessionConfigured:!0,\"codex/event/session_configured\":!0,\"codex/event/task_started\":!1,\"codex/event/agent_reasoning\":!1"
+          },
+          {
+            "offset": 2675378,
+            "code": "n,e=>{Cb(e),dgn(e.hookRuns??=[],r)},t.method===`hook/started`?{rebindLatestInProgressPlaceholder:!0}:void 0);break}case`model/rerouted`:{let{threadId:e,turnId:n,fromModel:r,toModel:i,reason:s}=t.params;a.updateTurnState(Xm(e),n,e=>{e.items.push({id:o(),type:`modelRerouted`,fromModel:r,toModel:i,reason:s})});break}case`error`:{let{error:e,willRetry:n,threadId:r,turnId:i}=t.params;a.updateTurnState(Xm(r),i,t=>{t.items.push({id:o(),type:`error`,message:e.message,willRe"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-primary-428fc28bff81.js",
+        "term": "resolved_model_slug",
+        "count": 2,
+        "snippets": [
+          {
+            "offset": 122234,
+            "code": "ql(e)?e.metadata?.thinking_effort:void 0)}}function l1e(e,t,n){let r=f1e.parse(e.metadata??{}),i=r.thinking_effort,a=[r.resolved_model_slug,r.model_slug].find(e=>typeof e==`string`&&(t?.modelConfigBySlug?.[e]!=null||Lx(t,{slug:e,thinkingEffort:null})!=null))??n.slug;return{slug:a,thinkingEffort:i,versionId:qg(t,a)}}async function u1e(e,{conversationId:t,isTemporaryChat:n,messageId:r,retry:i}){let a=e.get(g1e,t),o=e.get(GS,t)===`tpp`,s=o?await e.query.getOrFetch(ht):"
+          },
+          {
+            "offset": 124595,
+            "code": "U$e(),YD(),Zg(),Gxe(),d1e=sv([`standard`,`extended`,`min`,`max`,`ultra`,`xhigh`,`zero`]).nullable().catch(null),f1e=Vb({resolved_model_slug:fd().optional().catch(void 0),model_slug:fd().optional().catch(void 0),thinking_effort:d1e}),p1e=Vb({ghostrider_status:sv([`intermediate`,`final`,`cancelled`]).optional().catch(void 0),ghostrider:Vb({status:sv([`intermediate`,`final`,`cancelled`]).optional()}).optional().catch(void 0),image_gen_async:Rp(!0).optional().catch(void"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/viewer-e3cff5468b48.js",
+        "term": "case`server-ste-metadata`",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 24866,
+            "code": "`safety-review`:Fe(e,r,p,n);break;case`toast`:e.get(fe)[n.level](n.message,n.toastId==null?void 0:{id:n.toastId});break;case`server-ste-metadata`:m.serverMetadata=n.serverSteMetadata.metadata;break;case`complete`:b!=null&&dn(e,r,b)&&!na(e.get(Ca,r))&&(S=!0,ti(e,r,c),e.get(ds)?.complete({conversationId:r,isTemporaryChat:t.is_temporary_chat===!0}),F(e,r,p));break;case`message-marker`:case`perf-stats`:break}}}),x||(T=Ya(b,{conduitToken:null,logCancellation:()=>k(qe.CHA"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "copy",
+    "file": "E:/ChatGPT/runtimes/26.908.40834-2bd5b96a48232f3c-196687f3-20c164ade792a0d5/resources/app.asar",
+    "sha256": "8431532d63788b0ac71192ef6286d03b3cb521078f147d4e4b11f0f8c14186f4",
+    "hits": [
+      {
+        "asset": ".vite/build/main-D8abTQQE.js",
+        "term": "model/rerouted",
+        "count": 2,
+        "snippets": [
+          {
+            "offset": 1161501,
+            "code": "r,e=>{YS(e),J_e(e.hookRuns??=[],i)},t.method===`hook/started`?{rebindLatestInProgressPlaceholder:!0}:void 0);break}case`model/rerouted`:{let{threadId:e,turnId:r,fromModel:i,toModel:a,reason:c}=t.params;o.updateTurnState(n.Nu(e),r,e=>{e.items.push({id:s(),type:`modelRerouted`,fromModel:i,toModel:a,reason:c})});break}case`error`:{let{error:e,willRetry:r,threadId:i,turnId:a}=t.params;o.updateTurnState(n.Nu(i),a,t=>{t.items.push({id:s(),type:`error`,message:e.message,wi"
+          },
+          {
+            "offset": 1163703,
+            "code": "/started`:case`turn/completed`:case`turn/diff/updated`:case`turn/plan/updated`:case`model/safetyBuffering/updated`:case`model/rerouted`:case`hook/started`:case`hook/completed`:case`error`:if(Q_e(e,o,s,a)===`deferred`)return;break;case`item/started`:case`item/completed`:case`item/autoApprovalReview/started`:case`item/autoApprovalReview/completed`:case`autoApprovalReview/strictReviewRequired`:case`guardianWarning`:case`item/agentMessage/delta`:case`item/plan/delta`:ca"
+          }
+        ]
+      },
+      {
+        "asset": ".vite/build/src-CCXHtyvY.js",
+        "term": "model/rerouted",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 423481,
+            "code": ":!0,configWarning:!0,\"windows/worldWritableWarning\":!1,\"windowsSandbox/setupCompleted\":!0,\"account/login/completed\":!0,\"model/rerouted\":!0,\"model/verification\":!0,\"modelProvider/authRecoveryStarted\":!1,\"modelProvider/authRecoveryCompleted\":!1,\"model/safetyBuffering/updated\":!0,\"turn/moderationMetadata\":!1,authStatusChange:!1,loginChatGptComplete:!1,sessionConfigured:!0,\"codex/event/session_configured\":!0,\"codex/event/task_started\":!1,\"codex/event/agent_reasoning\":!1"
+          }
+        ]
+      },
+      {
+        "asset": ".vite/build/worker.js",
+        "term": "model/rerouted",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 898641,
+            "code": ":!0,configWarning:!0,\"windows/worldWritableWarning\":!1,\"windowsSandbox/setupCompleted\":!0,\"account/login/completed\":!0,\"model/rerouted\":!0,\"model/verification\":!0,\"modelProvider/authRecoveryStarted\":!1,\"modelProvider/authRecoveryCompleted\":!1,\"model/safetyBuffering/updated\":!0,\"turn/moderationMetadata\":!1,authStatusChange:!1,loginChatGptComplete:!1,sessionConfigured:!0,\"codex/event/session_configured\":!0,\"codex/event/task_started\":!1,\"codex/event/agent_reasoning\":!1"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-d9bed9d614d8.js",
+        "term": "server_ste_metadata",
+        "count": 4,
+        "snippets": [
+          {
+            "offset": 3693934,
+            "code": "perf_stats`:{let t=llr.safeParse(e);return t.success?{conversationId:null,perfStats:t.data,type:`perf-stats`}:null}case`server_ste_metadata`:{let t=ulr.safeParse(e);return t.success?{conversationId:t.data.conversation_id,serverSteMetadata:t.data,type:`server-ste-metadata`}:null}case`message_marker`:{let t=dlr.safeParse(e);return t.success?{conversationId:t.data.conversation_id,messageMarker:t.data,type:`message-marker`}:null}case`moderation`:{let t=plr.safeParse(e);"
+          },
+          {
+            "offset": 3696411,
+            "code": "onal(),type:P(`conversation_async_status`)}).loose(),llr=le(e=>HN(e)&&e.type===`perf_stats`),ulr=le(e=>HN(e)&&e.type===`server_ste_metadata`&&typeof e.conversation_id==`string`&&HN(e.metadata)),dlr=le(e=>HN(e)&&e.type===`message_marker`&&typeof e.conversation_id==`string`&&typeof e.message_id==`string`&&tlr(e.marker)&&(e.event===`first`||e.event===`last`)),flr=F({title:H(),details:H(),feedback_prompt:H().nullable().optional()}),plr=F({conversation_id:H(),moderation_"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-d9bed9d614d8.js",
+        "term": "case`server-ste-metadata`",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 4557509,
+            "code": "y),l.conversationId!==u&&yKr(e,l.conversationId,l.domain,l.structuredCopy);break;case`safety-review`:FSr(e,u,s,l);break;case`server-ste-metadata`:R.serverConversationId=l.serverSteMetadata.conversation_id,R.serverMetadata=l.serverSteMetadata.metadata;break;case`title`:XSr({scope:e,conversationId:u,onlyIfProvisional:!0,title:l.title});break;case`toast`:e.get(Db)[l.level](l.message,l.toastId==null?void 0:{id:l.toastId});break}},onTiming:e=>{ee?.onRequestTiming(e)},onR"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-d9bed9d614d8.js",
+        "term": "/f/conversation",
+        "count": 5,
+        "snippets": [
+          {
+            "offset": 2776972,
+            "code": ":Kln(JSON.stringify(t.jsonError))}:{}}}function Gln(e){return e?e.includes(`/conversation/resume`)?`resume`:e.includes(`/f/conversation`)?`send`:`unknown`:`unknown`}function Kln(e){return e.length<=2e3?e:`${e.slice(0,2e3)}…`}function qln(e){if(e instanceof Error)return Jln(e);if(e!=null)return{name:typeof e,message:Kln(String(e))}}function Jln(e){return{name:e.name,message:Kln(e.message),stack:e.stack?Kln(e.stack):void 0}}function Yln(e){if(typeof navigator<`u`&&!na"
+          },
+          {
+            "offset": 3721126,
+            "code": ",app_attest_challenge:e.appAttestChallenge}),S={...v,streamRequestId:``},C=pN();return S.streamRequestId=YM.streamPost(`/f/conversation`,{additionalHeaders:v.headers,retry:r==null?void 0:{getDelayMs:r,refreshRequest:async e=>{let t=await tdr(e);if(e.throwIfAborted(),t.chatRequirements.force_login)throw new aS(`force_login during retry`,403,`force_login`,null);return{headers:{...bir(),...JN({conduitToken:v.headers[`x-conduit-token`],integrityHeaders:t.headers,turnTra"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-initial-d9bed9d614d8.js",
+        "term": "model/rerouted",
+        "count": 2,
+        "snippets": [
+          {
+            "offset": 2156433,
+            "code": "n,e=>{T_(e),Gqt(e.hookRuns??=[],r)},t.method===`hook/started`?{rebindLatestInProgressPlaceholder:!0}:void 0);break}case`model/rerouted`:{let{threadId:e,turnId:n,fromModel:r,toModel:i,reason:s}=t.params;a.updateTurnState(bn(e),n,e=>{e.items.push({id:o(),type:`modelRerouted`,fromModel:r,toModel:i,reason:s})});break}case`error`:{let{error:e,willRetry:n,threadId:r,turnId:i}=t.params;a.updateTurnState(bn(r),i,t=>{t.items.push({id:o(),type:`error`,message:e.message,willRe"
+          },
+          {
+            "offset": 2158727,
+            "code": "/started`:case`turn/completed`:case`turn/diff/updated`:case`turn/plan/updated`:case`model/safetyBuffering/updated`:case`model/rerouted`:case`hook/started`:case`hook/completed`:case`error`:if(Qqt(e,a,o,i)===`deferred`)return;break;case`item/started`:case`item/completed`:case`item/autoApprovalReview/started`:case`item/autoApprovalReview/completed`:case`autoApprovalReview/strictReviewRequired`:case`guardianWarning`:case`item/agentMessage/delta`:case`item/plan/delta`:ca"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-primary-17b54400f32a.js",
+        "term": "resolved_model_slug",
+        "count": 2,
+        "snippets": [
+          {
+            "offset": 2636029,
+            "code": "_C(e)?e.metadata?.thinking_effort:void 0)}}function Omn(e,t,n){let r=jmn.parse(e.metadata??{}),i=r.thinking_effort,a=[r.resolved_model_slug,r.model_slug].find(e=>typeof e==`string`&&(t?.modelConfigBySlug?.[e]!=null||hbe(t,{slug:e,thinkingEffort:null})!=null))??n.slug;return{slug:a,thinkingEffort:i,versionId:Og(t,a)}}async function kmn(e,{conversationId:t,isTemporaryChat:n,messageId:r,retry:i}){let a=e.get(Fmn,t),o=e.get(aS,t)===`tpp`,s=o?await e.query.getOrFetch(Ace"
+          },
+          {
+            "offset": 2638087,
+            "code": "ae(),gmn(),xmn(),KS(),Amn=lT([`standard`,`extended`,`min`,`max`,`ultra`,`xhigh`,`zero`]).nullable().catch(null),jmn=$w({resolved_model_slug:iT().optional().catch(void 0),model_slug:iT().optional().catch(void 0),thinking_effort:Amn}),Mmn=$w({ghostrider_status:lT([`intermediate`,`final`,`cancelled`]).optional().catch(void 0),ghostrider:$w({status:lT([`intermediate`,`final`,`cancelled`]).optional()}).optional().catch(void 0),image_gen_async:Qw(!0).optional().catch(void"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/app-primary-17b54400f32a.js",
+        "term": "model/rerouted",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 2563,
+            "code": "mismatch || reroutes.length ? '中' : '低') : '未知';\n  let reason = conflict ? '同一轮次的模型路由证据不一致'\n    : reported ? 'Codex 保存的 model/rerouted 事件；不代表模型权重证明'\n    : '没有可用的服务端模型观测；未收到重路由通知不等于模型一致';\n  if (input.unavailable) { risk = '未知'; reason = '当前版本的只读状态接口不可用'; }\n  const provider = clean(input.provider);\n  return {\n    requested: requested || '未知', effort: effort || '未知',\n    reported: reported || '未知', provider: provider === 'openai' ? 'OpenAI' : provider || '未知',\n    curr"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/src-996ff3571e1f.js",
+        "term": "model/rerouted",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 112571,
+            "code": ":!0,configWarning:!0,\"windows/worldWritableWarning\":!1,\"windowsSandbox/setupCompleted\":!0,\"account/login/completed\":!0,\"model/rerouted\":!0,\"model/verification\":!0,\"modelProvider/authRecoveryStarted\":!1,\"modelProvider/authRecoveryCompleted\":!1,\"model/safetyBuffering/updated\":!0,\"turn/moderationMetadata\":!1,authStatusChange:!1,loginChatGptComplete:!1,sessionConfigured:!0,\"codex/event/session_configured\":!0,\"codex/event/task_started\":!1,\"codex/event/agent_reasoning\":!1"
+          }
+        ]
+      },
+      {
+        "asset": "webview/assets/viewer-ef092b409938.js",
+        "term": "case`server-ste-metadata`",
+        "count": 1,
+        "snippets": [
+          {
+            "offset": 21892,
+            "code": "`safety-review`:_n(e,r,_,n);break;case`toast`:e.get(Ir)[n.level](n.message,n.toastId==null?void 0:{id:n.toastId});break;case`server-ste-metadata`:v.serverMetadata=n.serverSteMetadata.metadata;break;case`complete`:S!=null&&dt(e,r,S);break;case`message-marker`:case`perf-stats`:break}}}),C||(w=ar(S,{conduitToken:null,logCancellation:()=>D(Qa.CHATGPT_TURN_COMPLETION_STATUS_CANCELED),markTerminal:()=>{O.flush(),O.cancel(),C=!0,Ue(e,r,c),w?.()},refetchAfterStop:!1}),bn({s"
+          }
+        ]
+      }
+    ]
+  }
+]

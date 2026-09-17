@@ -3,6 +3,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {archive, replaceFile, sha256, writeNewAtomic} from './asar.mjs';
+import {mergeDailyObserver} from '../experimental/daily-chat-patch.mjs';
 
 const marker = '/* CODEX_MODEL_INSPECTOR_V02 */';
 const tick = String.fromCharCode(96);
@@ -98,12 +99,14 @@ export function patch(original) {
   const mainPatched=quitCode+'\n'+mainSource.replace(closeFeature,'.on(`close`,e=>{if(process.env.CMI_EXIT_ON_CLOSE===`1`&&!this.isAppQuitting){e.preventDefault();__CMIRequestCopyQuit(require(`electron`).app);return}this.persistPrimaryWindowBounds(');
   const mainCheck=spawnSync(process.execPath,['--check'],{input:mainPatched,encoding:'utf8'});
   if(mainCheck.status!==0)throw Error('Window close patch syntax failed');
-  const result = replaceFile(replaceFile(original, d.name, Buffer.from(source), true),main,Buffer.from(mainPatched));
+  const baseResult = replaceFile(replaceFile(original, d.name, Buffer.from(source), true),main,Buffer.from(mainPatched));
+  const integrated = mergeDailyObserver(baseResult);
+  const result = integrated.bytes;
   return {bytes: result, report: {
     version: d.version, strategy: 'composer-return-metadata-v02',
     target: d.name, sourceSha256: sha256(original), patchedSha256: sha256(result),
     runtimeSha256: sha256(Buffer.from(runtime)), syntax: 'passed',
-    packedFilesPreserved: true, changedFiles:[d.name,main], support: d.support,
+    packedFilesPreserved: true, changedFiles:[...new Set([d.name,main,...integrated.report.assets])], support: d.support,
     note: 'Structural and byte verification; desktop acceptance is a separate test.'
   }};
 }

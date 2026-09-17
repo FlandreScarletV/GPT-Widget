@@ -1,0 +1,352 @@
+[
+  {
+    "mode": "same",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "upgrades": 1,
+    "httpCalls": 0,
+    "creates": 2,
+    "httpFallback": false,
+    "clientReportedReroute": false,
+    "gotOK": true,
+    "cliVersion": "0.155.0-alpha.2.6",
+    "observations": [
+      {
+        "transport": "websocket",
+        "connectionId": "1d2a3265-bdf8-4acb-997c-aaa047c24cf7",
+        "observedAt": "2026-09-17T01:25:50.759Z",
+        "kind": "connection",
+        "source": "handshake.openai-model",
+        "reportedModel": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "1d2a3265-bdf8-4acb-997c-aaa047c24cf7",
+        "observedAt": "2026-09-17T01:25:50.765Z",
+        "kind": "turn",
+        "requestId": "b44652c3-4fce-4e60-9131-acdec416f5fe",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_1",
+        "generationRequested": false,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "gpt-5.5"
+          },
+          {
+            "source": "response.model",
+            "model": "gpt-5.5"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "gpt-5.5",
+        "conflict": false,
+        "modelDifference": false
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "1d2a3265-bdf8-4acb-997c-aaa047c24cf7",
+        "observedAt": "2026-09-17T01:25:50.780Z",
+        "kind": "turn",
+        "requestId": "dd5d707d-a43c-49eb-b278-ba82158cf861",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_2",
+        "generationRequested": true,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "gpt-5.5"
+          },
+          {
+            "source": "response.model",
+            "model": "gpt-5.5"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "gpt-5.5",
+        "conflict": false,
+        "modelDifference": false
+      }
+    ]
+  },
+  {
+    "mode": "different",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "upgrades": 1,
+    "httpCalls": 0,
+    "creates": 2,
+    "httpFallback": false,
+    "clientReportedReroute": true,
+    "gotOK": true,
+    "cliVersion": "0.155.0-alpha.2.6",
+    "observations": [
+      {
+        "transport": "websocket",
+        "connectionId": "06da512f-5b6e-41dc-8ac2-761d1779b31e",
+        "observedAt": "2026-09-17T01:25:51.225Z",
+        "kind": "connection",
+        "source": "handshake.openai-model",
+        "reportedModel": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "06da512f-5b6e-41dc-8ac2-761d1779b31e",
+        "observedAt": "2026-09-17T01:25:51.227Z",
+        "kind": "turn",
+        "requestId": "ab3e0143-b732-496a-aa49-b0b992d6b312",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_1",
+        "generationRequested": false,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "probe-reported-model"
+          },
+          {
+            "source": "response.model",
+            "model": "probe-reported-model"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "probe-reported-model",
+        "conflict": false,
+        "modelDifference": true
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "06da512f-5b6e-41dc-8ac2-761d1779b31e",
+        "observedAt": "2026-09-17T01:25:51.237Z",
+        "kind": "turn",
+        "requestId": "3d87e8a2-5176-4f78-9f32-289c940ed675",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_2",
+        "generationRequested": true,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "probe-reported-model"
+          },
+          {
+            "source": "response.model",
+            "model": "probe-reported-model"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "probe-reported-model",
+        "conflict": false,
+        "modelDifference": true
+      }
+    ]
+  },
+  {
+    "mode": "disconnect-once",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "upgrades": 2,
+    "httpCalls": 0,
+    "creates": 3,
+    "httpFallback": false,
+    "clientReportedReroute": false,
+    "gotOK": true,
+    "cliVersion": "0.155.0-alpha.2.6",
+    "observations": [
+      {
+        "transport": "websocket",
+        "connectionId": "eb6271ec-bf61-40ad-989f-4e8cf8c3e7a8",
+        "observedAt": "2026-09-17T01:25:51.665Z",
+        "kind": "connection",
+        "source": "handshake.openai-model",
+        "reportedModel": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "eb6271ec-bf61-40ad-989f-4e8cf8c3e7a8",
+        "observedAt": "2026-09-17T01:25:51.667Z",
+        "kind": "turn",
+        "requestId": "790d5139-a282-435f-9d88-fb14bdd0d8cc",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_1",
+        "generationRequested": false,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "gpt-5.5"
+          },
+          {
+            "source": "response.model",
+            "model": "gpt-5.5"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "gpt-5.5",
+        "conflict": false,
+        "modelDifference": false
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "eb6271ec-bf61-40ad-989f-4e8cf8c3e7a8",
+        "observedAt": "2026-09-17T01:25:51.679Z",
+        "kind": "turn",
+        "requestId": "0e8cbdf6-7a4e-4138-a745-f85a3dcbb156",
+        "requestedModel": "gpt-5.5",
+        "responseId": null,
+        "generationRequested": true,
+        "association": "single_inflight",
+        "evidence": [],
+        "explicitReroutes": [],
+        "outcome": "disconnected",
+        "reportedModel": null,
+        "conflict": false,
+        "modelDifference": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "88a055c5-4238-494b-9162-893dd2e08c14",
+        "observedAt": "2026-09-17T01:25:51.897Z",
+        "kind": "connection",
+        "source": "handshake.openai-model",
+        "reportedModel": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "88a055c5-4238-494b-9162-893dd2e08c14",
+        "observedAt": "2026-09-17T01:25:51.899Z",
+        "kind": "turn",
+        "requestId": "34ab6cbe-d195-4c9f-89f5-660f7a0973e4",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_3",
+        "generationRequested": true,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "gpt-5.5"
+          },
+          {
+            "source": "response.model",
+            "model": "gpt-5.5"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "gpt-5.5",
+        "conflict": false,
+        "modelDifference": false
+      }
+    ]
+  },
+  {
+    "mode": "abnormal-close-once",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "upgrades": 2,
+    "httpCalls": 0,
+    "creates": 3,
+    "httpFallback": false,
+    "clientReportedReroute": false,
+    "gotOK": true,
+    "cliVersion": "0.155.0-alpha.2.6",
+    "observations": [
+      {
+        "transport": "websocket",
+        "connectionId": "e3e64bd0-8d5b-4d55-907a-7d3291ec8803",
+        "observedAt": "2026-09-17T01:25:52.355Z",
+        "kind": "connection",
+        "source": "handshake.openai-model",
+        "reportedModel": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "e3e64bd0-8d5b-4d55-907a-7d3291ec8803",
+        "observedAt": "2026-09-17T01:25:52.357Z",
+        "kind": "turn",
+        "requestId": "ca731d60-f9b4-4ded-9f8d-c80c2669cc3d",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_1",
+        "generationRequested": false,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "gpt-5.5"
+          },
+          {
+            "source": "response.model",
+            "model": "gpt-5.5"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "gpt-5.5",
+        "conflict": false,
+        "modelDifference": false
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "e3e64bd0-8d5b-4d55-907a-7d3291ec8803",
+        "observedAt": "2026-09-17T01:25:52.368Z",
+        "kind": "turn",
+        "requestId": "ed7a07c9-181b-48f4-9680-5dfdb8a50b0b",
+        "requestedModel": "gpt-5.5",
+        "responseId": null,
+        "generationRequested": true,
+        "association": "single_inflight",
+        "evidence": [],
+        "explicitReroutes": [],
+        "outcome": "disconnected",
+        "reportedModel": null,
+        "conflict": false,
+        "modelDifference": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "f4a425e7-f4d2-478d-9305-6d26c7ab74ed",
+        "observedAt": "2026-09-17T01:25:52.585Z",
+        "kind": "connection",
+        "source": "handshake.openai-model",
+        "reportedModel": null
+      },
+      {
+        "transport": "websocket",
+        "connectionId": "f4a425e7-f4d2-478d-9305-6d26c7ab74ed",
+        "observedAt": "2026-09-17T01:25:52.587Z",
+        "kind": "turn",
+        "requestId": "26eb8cd4-3532-4900-b805-58ccc6f58772",
+        "requestedModel": "gpt-5.5",
+        "responseId": "resp_local_3",
+        "generationRequested": true,
+        "association": "single_inflight",
+        "evidence": [
+          {
+            "source": "event.headers.openai-model",
+            "model": "gpt-5.5"
+          },
+          {
+            "source": "response.model",
+            "model": "gpt-5.5"
+          }
+        ],
+        "explicitReroutes": [],
+        "outcome": "response.completed",
+        "reportedModel": "gpt-5.5",
+        "conflict": false,
+        "modelDifference": false
+      }
+    ]
+  }
+]

@@ -2,6 +2,7 @@
 - 就是一个非常轻量化的，并且可以在你的~~ ChatGPT 桌面端 ~~显示当前正在使用的模型、思考程度、是否被重路由成其他模型、IP信息和IP质量的小组件。不过不是直接修改的ChatGPT前端。对你的账号、ChatGPT 桌面端软件没有太大的风险。
 
 ## 前言
+- 支持 Windows 系统。
 - 首先电脑上必须安装好 Node.js 22+ 和 PowerShell 7+ (pwsh)，把整个仓库下载下来。
 - 然后需要先在官方 ChatGPT 桌面端登录过一次，至少正常进入一次主界面，随后完全退出官方 APP。
 
@@ -32,6 +33,24 @@
 - 完全退出副本软件后，删除副本软件及配置目录`GPTWidget`文件夹即可。无需重新安装ChatGPT，不会删除你原有的任何数据。清理仍会保留你的API密钥。
 
 - 或者直接运行`清理副本.cmd`，请先从托盘退出要清理的副本。输入编号（逗号分隔），确认路径后输入 DELETE 才删除；直接回车取消。
+
+## 更新说明
+
+- 2026-09-17：更新了 Chat 页面的模型检测来源，现在你能在“**遥测模型**”鼠标悬停时看到显示字段：
+  - 本次启动最近一轮请求：`requestModel`
+  - 服务器遥测:`serverTelemetryModel`
+  - 助手消息:`message.metadata.model_slug`
+  - Resolved:`message.metadata.resolved_model_slug`
+  - 字段结果说明：
+    - `requestModel`：客户端实际发送的请求模型。
+    - `serverTelemetryModel`：服务器遥测中报告的模型标识。
+    - `assistantMessageModel`：Assistant 消息元数据中的模型标识。
+    - `resolvedModelSlug`：响应/消息中记录的 Resolved 模型标识。
+    - `resolvedModelRole`：Resolved 字段对应的消息角色。
+    - `explicitReroute`：是否观测到明确的模型重路由事件。
+    - `metadataDifference`：不同来源的模型字段是否存在差异。
+    - `observedAt`：本次观测记录时间。
+
 
 
 
