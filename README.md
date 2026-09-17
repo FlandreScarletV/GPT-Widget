@@ -40,6 +40,9 @@
 - 或者直接运行`清理副本.cmd`，请先从托盘退出要清理的副本。输入编号（逗号分隔），确认路径后输入 DELETE 才删除；直接回车取消。
 
 ## 更新说明
+<div align="center">
+<img width="475" alt="image" src="https://github.com/user-attachments/assets/682ec0eb-6f68-4da8-9a26-b21291727da4" />
+</div>  
 
 - 2026-09-17：更新了 Chat 页面的模型检测来源，现在你能在“**遥测模型**”鼠标悬停时看到显示字段：
   - 本次启动最近一轮请求：`requestModel`
