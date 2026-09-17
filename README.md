@@ -7,6 +7,7 @@
 
 
 ## 前言
+- Windows系统。
 - 首先电脑上必须安装好 **[Node.js 22+](https://nodejs.org/zh-cn)** 和 **PowerShell 7+ (pwsh)**，把整个仓库下载下来。
 - 然后需要先在官方 ChatGPT 桌面端登录过一次，至少正常进入一次主界面，随后完全退出官方的ChatGPT。
 
