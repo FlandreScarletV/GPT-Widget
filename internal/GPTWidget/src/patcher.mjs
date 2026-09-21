@@ -31,7 +31,13 @@ export function detect(original) {
   }
   const {name, text} = unique(candidates, 'Composer root bundle');
   if (text.includes(marker)) throw Error('Already patched; use the official original archive');
-  const rootAt = unique(text.matchAll(/"data-codex-composer-root":/g), 'Composer root').index;
+  const roots = [...text.matchAll(/"data-codex-composer-root":/g)].filter(hit => {
+    const begin = [...text.slice(0, hit.index).matchAll(/function ([\w$]+)\([\w$]+\)\{/g)].at(-1)?.index;
+    const finish = text.indexOf('function ', hit.index);
+    const candidate = begin === undefined ? '' : text.slice(begin, finish);
+    return /\{activeMode:[\w$]+,modes:/.test(candidate) && candidate.includes('threadId:');
+  });
+  const rootAt = unique(roots, 'Composer with live model and thread context').index;
   const starts = Array.from(text.slice(0, rootAt).matchAll(/function ([\w$]+)\([\w$]+\)\{/g));
   const start = starts.at(-1)?.index;
   if (start === undefined) throw Error('待适配版本: Composer function');
@@ -67,9 +73,20 @@ export function detect(original) {
 export function patch(original) {
   const d = detect(original);
   const runtime = fs.readFileSync(statusFile, 'utf8').replaceAll('export function ', 'function ');
-  const fileRpc=match(d.text,/([\w$]+)\(`write-file`,\{params:\{content:/,'local file request helper')[1];
-  const factory = '\n' + marker + '\nconst __CMICreate=(()=>{' + runtime
-    + '\nreturn React=>createInspector(React,(path,content=`refresh`)=>'+fileRpc+'(`write-file`,{params:{content,expectedMtimeMs:null,hostId:`local`,path}}));})();let __CMIFrame;\n';
+  const legacyRpc=d.text.match(/([\w$]+)\(`write-file`,\{params:\{content:/)?.[1];
+  let extraImport='',writeCall;
+  if(legacyRpc)writeCall=legacyRpc+'(`write-file`,{params:{content,expectedMtimeMs:null,hostId:`local`,path}})';
+  else {
+    const files=archive(original);
+    const storage=unique([...files.entries].filter(([n,e])=>!e.unpacked&&/^webview\/assets\/text-file-storage-[\w-]+\.js$/.test(n)),'text file storage');
+    const storageSource=files.read(storage[0]).toString();
+    const fn=match(storageSource,/async function ([\w$]+)\(\{cloudFileAccess:[\w$]+,content:/,'write function')[1];
+    const exported=match(storageSource,new RegExp('\\b'+fn+' as ([\\w$]+)[,}]'),'write export')[1];
+    extraImport='import{'+exported+' as __CMIWrite}from"./'+path.posix.basename(storage[0])+'";\n';
+    writeCall='__CMIWrite({content,expectedMtimeMs:null,hostId:`local`,filePath:path})';
+  }
+  const factory = extraImport+'\n' + marker + '\nconst __CMICreate=(()=>{' + runtime
+    + '\nreturn React=>createInspector(React,(path,content=`refresh`)=>'+writeCall+');})();let __CMIFrame;\n';
   const tail = ',(0,' + d.jsx + '.jsx)((__CMIFrame??=__CMICreate(' + d.react + ')),{root:'
     + d.rootVar + ',manager:' + d.manager + ',threadId:' + d.thread + ',turnKey:' + d.turn
     + ',selection:' + d.active + '.settings})}';

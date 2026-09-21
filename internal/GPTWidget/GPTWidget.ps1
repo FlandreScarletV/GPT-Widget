@@ -148,9 +148,10 @@ try {
     $source = Join-Path $InstallRoot 'resources\app.asar'
     $patcher = Join-Path $PSScriptRoot 'src\patcher.mjs'
     try { $inspection = Invoke-Patcher @('inspect', $source) } catch {
-        @{ status = '待适配版本'; installRoot = $InstallRoot; time = (Get-Date).ToString('o') } |
+        $compatibilityReason = $_.Exception.Message
+        @{ status = '待适配版本'; reason = $compatibilityReason; installRoot = $InstallRoot; time = (Get-Date).ToString('o') } |
             ConvertTo-Json | Set-Content (Join-Path $StateRoot 'last-check.json')
-        throw '特征不兼容，未修改任何已安装文件。上一版工作副本及备份保留。'
+        throw ('特征不兼容，未修改已安装文件。具体原因：' + $compatibilityReason)
     }
     if ($Mode -eq 'Inspect') { $inspection; return }
     $sourceHash = Hash $source
@@ -209,6 +210,13 @@ try {
     if ($Mode -eq 'Prepare') { return }
     $environmentFile = Join-Path $StateRoot 'environment.json'
     $savedEnvironment = if (Test-Path -LiteralPath $environmentFile) { Get-Content -LiteralPath $environmentFile -Raw | ConvertFrom-Json } else { $null }
+    if (-not $savedEnvironment -and -not $CodexDirectory) {
+        $previousChoice = Join-Path $packageRoot '.official-data-choice.json'
+        if (Test-Path -LiteralPath $previousChoice) {
+            $CodexDirectory = (Get-Content -Raw -LiteralPath $previousChoice | ConvertFrom-Json).path
+            if ($CodexDirectory) { $UseOfficialData = $true }
+        }
+    }
     $profilePath = if ($ProfileDirectory) { [IO.Path]::GetFullPath($ProfileDirectory) } elseif ($savedEnvironment.profile) { $savedEnvironment.profile } else { Join-Path $StateRoot 'profile' }
     $data = if ($CodexDirectory) { [IO.Path]::GetFullPath($CodexDirectory) } elseif ($savedEnvironment.codexHome) { $savedEnvironment.codexHome } else { Join-Path $StateRoot 'codex-home' }
     $shared = [bool]($UseOfficialData -or $savedEnvironment.sharedOfficialData)
@@ -273,6 +281,13 @@ try {
     $start.WindowStyle = [Diagnostics.ProcessWindowStyle]::Normal
     $start.Environment['CODEX_ELECTRON_USER_DATA_PATH'] = $profilePath
     $start.Environment['CODEX_HOME'] = $data
+    # A copied executable has no MSIX identity. Use the supported explicit core
+    # path so bootstrap selects the bundled core rather than package activation.
+    if ([string]::IsNullOrWhiteSpace($start.Environment['CODEX_CLI_PATH'])) {
+        $bundledCore = Join-Path $runtime 'resources\codex.exe'
+        if (-not (Test-Path -LiteralPath $bundledCore -PathType Leaf)) { throw '副本缺少 resources\codex.exe，无法使用独立运行模式。请重新安装副本。' }
+        $start.Environment['CODEX_CLI_PATH'] = $bundledCore
+    }
     # Keep the app's normal close-to-tray and tray-menu quit behavior.
     $start.Environment['CMI_EXIT_ON_CLOSE'] = '0'
     $start.ArgumentList.Add('--user-data-dir=' + $profilePath)
