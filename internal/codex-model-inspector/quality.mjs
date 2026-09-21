@@ -23,17 +23,20 @@ export async function queryQuality(ip,key,fetcher=fetch) {
   for(const source of [qualitySource,'https://de.ipapi.is/']){
     try {
       const response=await fetcher(source,{method:'POST',redirect:'error',signal:AbortSignal.timeout(8000),headers:{'Content-Type':'application/json','Accept':'application/json','User-Agent':'CodexModelInspector/0.3'},body:JSON.stringify({q:ip,key})});
-      if(!response.ok)throw Error('HTTP_'+response.status);
+      if(!response.ok){
+        let code=null;try{const body=await response.text();if(body.length<=65536){const parsed=JSON.parse(body);if(['ERR_FORBIDDEN_INVALID_API_KEY','ERR_QUOTA_EXCEEDED','ERR_FREE_TIER_EXHAUSTED'].includes(parsed.error_code))code=parsed.error_code}}catch{}
+        throw Object.assign(Error('HTTP_'+response.status),{qualityCode:code});
+      }
       const text=await response.text();if(text.length>65536)throw Error('oversized');
       const quality=normalizeQuality(JSON.parse(text),ip);
       attempts.push({source,status:'ok'});
       return {status:'ok',...quality,source,attempts};
     }catch(e){
-      const status=e.message==='response_ip_mismatch'?'response_ip_mismatch':errorCategory(e);
+      const status=e.qualityCode|| (e.message==='response_ip_mismatch'?'response_ip_mismatch':errorCategory(e));
       attempts.push({source,status});
       // Only transport failures use the documented regional fallback. No retry for quota or credentials.
       if(!['connection_reset','dns_error','timeout'].includes(status)||source!==qualitySource)
-        return {status,level:'未知',reason:'IP质量查询失败，未使用旧结果',attempts};
+        return {status,level:'未知',reason:status==='ERR_FORBIDDEN_INVALID_API_KEY'?'IP质量服务密钥无效或已停用，请重新配置':status==='ERR_QUOTA_EXCEEDED'||status==='ERR_FREE_TIER_EXHAUSTED'?'IP质量查询额度已用尽':'IP质量查询失败（'+status+'），未使用旧结果',attempts};
     }
   }
 }

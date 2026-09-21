@@ -9,6 +9,7 @@ param(
     [string]$CodexDirectory,
     [switch]$Restart,
     [switch]$UseOfficialData,
+    [switch]$VerifySharedCoexistence,
     [switch]$ChooseInstallDirectory,
     [switch]$ChooseDataDirectory
 )
@@ -219,7 +220,8 @@ try {
     }
     $profilePath = if ($ProfileDirectory) { [IO.Path]::GetFullPath($ProfileDirectory) } elseif ($savedEnvironment.profile) { $savedEnvironment.profile } else { Join-Path $StateRoot 'profile' }
     $data = if ($CodexDirectory) { [IO.Path]::GetFullPath($CodexDirectory) } elseif ($savedEnvironment.codexHome) { $savedEnvironment.codexHome } else { Join-Path $StateRoot 'codex-home' }
-    $shared = [bool]($UseOfficialData -or $savedEnvironment.sharedOfficialData)
+    $shared = [bool]($UseOfficialData -or $savedEnvironment.sharedOfficialData -or $savedEnvironment.sharedWorkHome)
+    if ($savedEnvironment.sharedWorkHome -and -not $CodexDirectory) { $data = $savedEnvironment.sharedWorkHome }
     if ($UseOfficialData) {
         if (-not $CodexDirectory) {
             $choiceFile=Join-Path $packageRoot '.official-data-choice.json'
@@ -230,11 +232,18 @@ try {
         if (-not (Test-Path -LiteralPath (Join-Path $data 'config.toml'))) { throw '所选官方工作目录不存在，未更换目录。' }
     }
     if ($shared) {
-        # Until concurrent desktop writes are verified, require an exclusive launch.
+        # Enable everyday coexistence for the version verified on this machine.
+        # Keep explicit verification available when adapting a newer version.
+        $coexistenceAllowed = $VerifySharedCoexistence -or $current.version -eq '26.915.31945'
         $official = @(Get-Process ChatGPT -ErrorAction SilentlyContinue | Where-Object {
             $_.Path -and $_.Path -notlike ((Join-Path $StateRoot 'runtimes')+'\*')
         })
-        if ($official.Count) { throw '共用工作数据入口已准备好。请先退出官方 APP（包括托盘）再打开此入口；当前数据未改动。' }
+        if ($official.Count -and -not $coexistenceAllowed) { throw '此副本版本尚未验证共存。请先退出官方 APP，或完成新版共存验证。' }
+        if ($coexistenceAllowed) {
+            if ([IO.Path]::GetFullPath($profilePath).TrimEnd('\') -eq [IO.Path]::GetFullPath($data).TrimEnd('\')) { throw '共存验证要求独立的窗口配置目录。' }
+            if ([IO.Path]::GetFullPath($profilePath).TrimEnd('\') -ne [IO.Path]::GetFullPath((Join-Path $StateRoot 'profile')).TrimEnd('\')) { throw '共存模式需要使用副本自身的 profile 目录，不能复用官方窗口配置。' }
+            Write-Output '共存模式：独立登录，共享本地工作会话。'
+        }
         if ($savedEnvironment.sharedOfficialData -and -not $UseOfficialData -and -not $CodexDirectory) { $data = $savedEnvironment.codexHome }
     }
     $otherCopy = Get-Process ChatGPT -ErrorAction SilentlyContinue | Where-Object {
@@ -260,15 +269,20 @@ try {
     if (-not (Test-Path (Join-Path $PSScriptRoot '..\codex-model-inspector\server.mjs'))) {
         throw '缺少同级 codex-model-inspector 查询组件；请保留两个输出目录。'
     }
+    $workHome = if ($shared) { $data } else { $null }
+    if ($workHome) {
+        . (Join-Path $PSScriptRoot 'Account-Home.ps1')
+        $data = Initialize-WidgetAccountHome -StateRoot $StateRoot -WorkHome $workHome
+    }
     if ($savedEnvironment) {
         foreach ($savedPath in @($profilePath,$data)) { if (-not (Test-Path -LiteralPath $savedPath)) { throw ('原用户环境目录不存在，停止启动而不是创建空环境：'+$savedPath) } }
     }
     $null = New-Item -ItemType Directory -Force -Path $profilePath,$data
     if (Test-Path -LiteralPath $environmentFile) { Copy-Item -LiteralPath $environmentFile -Destination ($environmentFile+'.previous') -Force }
-    @{profile=$profilePath;codexHome=$data;sharedOfficialData=$shared} | ConvertTo-Json | Set-Content -LiteralPath ($environmentFile+'.tmp')
+    @{profile=$profilePath;codexHome=$data;sharedOfficialData=$false;sharedWorkHome=$workHome;accountIsolation="file-v1"} | ConvertTo-Json | Set-Content -LiteralPath ($environmentFile+'.tmp')
     Move-Item -LiteralPath ($environmentFile+'.tmp') -Destination $environmentFile -Force
     $appearanceSourceRecord = Join-Path $StateRoot 'appearance-source.txt'
-    $appearanceSource = if ($shared) { Join-Path $data 'config.toml' } elseif (Test-Path -LiteralPath $appearanceSourceRecord) { (Get-Content -LiteralPath $appearanceSourceRecord -Raw).Trim() }
+    $appearanceSource = if ($workHome) { Join-Path $workHome 'config.toml' } elseif (Test-Path -LiteralPath $appearanceSourceRecord) { (Get-Content -LiteralPath $appearanceSourceRecord -Raw).Trim() }
         elseif ($env:CODEX_HOME) { Join-Path $env:CODEX_HOME 'config.toml' }
         else { Join-Path $env:USERPROFILE '.codex\config.toml' }
     & $node (Join-Path $PSScriptRoot 'src\sync-appearance.mjs') $appearanceSource (Join-Path $data 'config.toml')
@@ -281,6 +295,8 @@ try {
     $start.WindowStyle = [Diagnostics.ProcessWindowStyle]::Normal
     $start.Environment['CODEX_ELECTRON_USER_DATA_PATH'] = $profilePath
     $start.Environment['CODEX_HOME'] = $data
+    if ($workHome) { $start.Environment['CODEX_SQLITE_HOME'] = $workHome }
+    else { $null = $start.Environment.Remove('CODEX_SQLITE_HOME') }
     # A copied executable has no MSIX identity. Use the supported explicit core
     # path so bootstrap selects the bundled core rather than package activation.
     if ([string]::IsNullOrWhiteSpace($start.Environment['CODEX_CLI_PATH'])) {

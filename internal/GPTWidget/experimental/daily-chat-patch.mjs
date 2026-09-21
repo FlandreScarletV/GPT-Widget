@@ -37,7 +37,7 @@ export function mergeDailyObserver(bytes){
     const observed=chatRecord?.conversationId===chatConversationId?chatRecord:null;
     const chatDisplay=describeChatObservation(observed);`);
  replace("['当前模型', value.current, value.currentNote+(exit?.logError?' 日记写入暂时失败，后台将重试。':''), value.mismatch ? colors.yellow : undefined]", "[isChat?'遥测模型':'当前模型', isChat?chatDisplay.model:value.current, isChat?undefined:value.currentNote+(exit?.logError?' 日记写入暂时失败，后台将重试。':''), (isChat?chatDisplay.difference:value.mismatch) ? colors.yellow : undefined]");
- replace("const details=label==='IP'||label==='IP风险';", "const details=label==='IP'||label==='IP风险'||label==='遥测模型';\n      const showDetails=()=>{setDetailType(label==='遥测模型'?'model':'ip');setHover(true)};");
+ replace("const details=label==='IP'||label==='IP风险';", "const details=label==='IP'||label==='IP风险'||(isChat&&label==='遥测模型');\n      const showDetails=()=>{setDetailType(label==='遥测模型'?'model':'ip');setHover(true)};");
  replace('onMouseEnter:details?()=>setHover(true):undefined','onMouseEnter:details?showDetails:undefined');
  replace('onFocus:details?()=>setHover(true):undefined','onFocus:details?showDetails:undefined');
  replace("lines.map((line,i)=>h('div',{key:i},line))", "(detailType==='model'?chatDisplay.lines:lines).map((line,i)=>h('div',{key:i},line))");
