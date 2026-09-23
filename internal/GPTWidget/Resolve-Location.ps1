@@ -1,4 +1,4 @@
-﻿#requires -Version 7.0
+#requires -Version 7.0
 function Resolve-WidgetLocation {
     param([string]$PackageRoot,[string]$ExplicitRoot,[string]$LocalData=$env:LOCALAPPDATA)
     $PackageRoot=[IO.Path]::GetFullPath($PackageRoot)
@@ -8,7 +8,23 @@ function Resolve-WidgetLocation {
         if(-not $path){return $null}
         $path=[IO.Path]::GetFullPath($path)
         $file=Join-Path $path 'current.json'
-        if(-not(Test-Path -LiteralPath $file)){return $null}
+        if(-not(Test-Path -LiteralPath $file)){
+            $valid=@()
+            foreach($record in @(Get-ChildItem -LiteralPath (Join-Path $path 'runtimes') -Filter 'widget-runtime.json' -Recurse -ErrorAction SilentlyContinue)){
+                try {
+                    $old=Get-Content -LiteralPath $record.FullName -Raw|ConvertFrom-Json
+                    $dir=$record.Directory.FullName
+                    if([IO.Path]::GetFullPath($old.runtime).TrimEnd('\') -ne $dir){continue}
+                    $asar=Join-Path $dir 'resources/app.asar'
+                    $expected=if($old.patchDisabled){$old.sourceSha256}else{$old.patchedSha256}
+                    if((Test-Path (Join-Path $dir 'ChatGPT.exe')) -and (Test-Path $old.backup) -and (Get-FileHash $asar).Hash -eq $expected -and (Get-FileHash $old.backup).Hash -eq $old.sourceSha256){$valid+=$record}
+                } catch { }
+            }
+            $chosen=$valid|Sort-Object LastWriteTime -Descending|Select-Object -First 1
+            if(-not $chosen){return $null}
+            Copy-Item -LiteralPath $chosen.FullName -Destination $file
+            Write-Host '已校验并恢复保留的旧副本启动记录。'
+        }
         $m=Get-Content -LiteralPath $file -Raw|ConvertFrom-Json
         if(-not $m.runtime -or -not $m.backup){return $null}
         # Locate the same runtime and backup within the state tree after a move.

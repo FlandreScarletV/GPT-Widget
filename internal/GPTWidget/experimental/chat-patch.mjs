@@ -22,6 +22,17 @@ export function patchChatObserver(bytes, logDirectory, options = {}) {
   const mainSource=`(()=>{${options.daily?'':'if(process.env.GPTWIDGET_CHAT_OBSERVER!=="1")return;'}${clean}\n${sink}\n${store}\n${stateFile}\n${lifecycle}\nconst fs=require('node:fs'),path=require('node:path'),app=require('electron').app,dir=${options.daily?'path.resolve(process.resourcesPath,"../../..","logs","chat-model")':JSON.stringify(logDirectory)};const publish=${options.daily?'installChatStateFile(fs,path,process.resourcesPath,createChatDisplayStore(cleanChatRecord))':'undefined'};installChatLogSink(app,fs,path,dir,cleanChatRecord,publish);installTestLifecycle(app,event=>{fs.mkdirSync(dir,{recursive:true});const file=path.join(dir,'test-lifecycle.jsonl');if(fs.existsSync(file)&&fs.statSync(file).size>131072)fs.renameSync(file,file+'.previous');fs.appendFileSync(file,JSON.stringify({at:new Date().toISOString(),pid:process.pid,event})+'\\n','utf8');});})();\n`+ar.read(main).toString();
   for(const [name,code]of [[selected.name,source],[main,mainSource]]){const check=spawnSync(process.execPath,['--input-type='+ (name===main?'commonjs':'module'),'--check'],{input:code,encoding:'utf8'});if(check.status!==0)throw Error('Syntax failure '+name+': '+check.stderr);}
   let patched=replaceFile(bytes,selected.name,Buffer.from(source));patched=replaceFile(patched,main,Buffer.from(mainSource));
-  return {bytes:patched,report:{version:pkg.version,originalSha256:sha256(bytes),patchedSha256:sha256(patched),assets:[selected.name,main],logDirectory}};
+  const trayAssets=[];
+  for(const [name] of ar.entries){
+    if(!name.startsWith('.vite/build/')||!name.endsWith('.js'))continue;
+    const text=ar.read(name).toString();
+    const pattern=/new ([\w$]+)\.Tray\(([^,]+),process\.platform===`win32`&&\1\.app\.isPackaged\?([\w$]+)\(([^)]+)\):void 0\)/g;
+    const matches=[...text.matchAll(pattern)];if(!matches.length)continue;
+    if(matches.length!==1)throw Error('Ambiguous tray identity');
+    const updated=text.replace(pattern,'new $1.Tray($2,process.platform===`win32`?`7753b2e9-599f-4ab6-a4a6-58df27d96ea2`:void 0)');
+    patched=replaceFile(patched,name,Buffer.from(updated));trayAssets.push(name);
+  }
+  if(trayAssets.length!==1)throw Error('Unsupported tray identity count: '+trayAssets.length);
+  return {bytes:patched,report:{version:pkg.version,originalSha256:sha256(bytes),patchedSha256:sha256(patched),assets:[selected.name,main,...trayAssets],logDirectory}};
 }
 

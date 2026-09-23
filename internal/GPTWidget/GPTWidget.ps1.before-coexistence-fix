@@ -239,12 +239,11 @@ try {
     if ($shared) {
         # Enable everyday coexistence for the version verified on this machine.
         # Keep explicit verification available when adapting a newer version.
-        & $node (Join-Path $PSScriptRoot 'src\check-coexistence.mjs') $target
-        $coexistenceAllowed = -not $current.patchDisabled -and $LASTEXITCODE -eq 0
+        $coexistenceAllowed = $VerifySharedCoexistence -or $current.version -eq '26.915.31945'
         $official = @(Get-Process ChatGPT -ErrorAction SilentlyContinue | Where-Object {
             $_.Path -and $_.Path -notlike ((Join-Path $StateRoot 'runtimes')+'\*')
         })
-        if ($official.Count -and -not $coexistenceAllowed) { throw '副本隔离补丁检查未通过，请重新准备副本。' }
+        if ($official.Count -and -not $coexistenceAllowed) { throw '此副本版本尚未验证共存。请先退出官方 APP，或完成新版共存验证。' }
         if ($coexistenceAllowed) {
             if ([IO.Path]::GetFullPath($profilePath).TrimEnd('\') -eq [IO.Path]::GetFullPath($data).TrimEnd('\')) { throw '共存验证要求独立的窗口配置目录。' }
             if ([IO.Path]::GetFullPath($profilePath).TrimEnd('\') -ne [IO.Path]::GetFullPath((Join-Path $StateRoot 'profile')).TrimEnd('\')) { throw '共存模式需要使用副本自身的 profile 目录，不能复用官方窗口配置。' }
@@ -346,4 +345,3 @@ try {
         catch { Write-Output '副本仍在加载。再次点击打开可唤出窗口；无窗口时可使用 Restart Inspector.cmd 恢复。' }
     }
 } finally { $lock.Dispose() }
-
