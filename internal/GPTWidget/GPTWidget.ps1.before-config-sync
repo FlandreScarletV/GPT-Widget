@@ -294,13 +294,6 @@ try {
     & $node (Join-Path $PSScriptRoot 'src\sync-appearance.mjs') $appearanceSource (Join-Path $data 'config.toml')
     if ($LASTEXITCODE -ne 0) { throw '外观同步失败，已停止启动；原配置备份保留。' }
     if (Test-Path -LiteralPath $appearanceSource) { Set-Content -LiteralPath $appearanceSourceRecord -Value $appearanceSource }
-    if ($ChooseDataDirectory) {
-        $python = Join-Path $env:USERPROFILE '.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe'
-        if (-not (Test-Path $python)) { $python = (Get-Command python.exe -ErrorAction Stop).Source }
-        & $python (Join-Path $PSScriptRoot 'sync-config.py') $workHome $data (Join-Path $runtime 'resources/codex.exe')
-        if ($LASTEXITCODE -ne 0) { throw '插件或工具同步有失败项；已保留配置备份，请查看上面的失败名称。' }
-        Write-Output '已同步插件、MCP 和本地 App 设置。App 登录授权需在副本账号完成。'
-    }
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = Join-Path $runtime 'ChatGPT.exe'
     $start.UseShellExecute = $false
@@ -353,5 +346,4 @@ try {
         catch { Write-Output '副本仍在加载。再次点击打开可唤出窗口；无窗口时可使用 Restart Inspector.cmd 恢复。' }
     }
 } finally { $lock.Dispose() }
-
 
