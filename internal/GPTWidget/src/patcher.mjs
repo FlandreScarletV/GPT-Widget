@@ -118,8 +118,11 @@ export function patch(original) {
   const mainCheck=spawnSync(process.execPath,['--check'],{input:mainPatched,encoding:'utf8'});
   if(mainCheck.status!==0)throw Error('Window close patch syntax failed');
   const baseResult = replaceFile(replaceFile(original, d.name, Buffer.from(source), true),main,Buffer.from(mainPatched));
-  const integrated = mergeDailyObserver(baseResult);
-  const workIntegrated = patchWorkTelemetry(integrated.bytes);
+  let integrated, workIntegrated;
+  try { integrated = mergeDailyObserver(baseResult); }
+  catch (error) { throw Error('Chat metadata module: ' + error.message); }
+  try { workIntegrated = patchWorkTelemetry(integrated.bytes); }
+  catch (error) { throw Error('Work telemetry module: ' + error.message); }
   const result = workIntegrated.bytes;
   return {bytes: result, report: {
     version: d.version, strategy: 'composer-return-metadata-v02',
@@ -150,6 +153,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (command === 'inspect') {
       const d = detect(fs.readFileSync(input));
       console.log(JSON.stringify({compatible: true, version: d.version, target: d.name, support: d.support}, null, 2));
+    } else if (command === 'check') {
+      console.log(JSON.stringify(patch(fs.readFileSync(input)).report));
     } else if (command === 'build' && input && output && backup) {
       console.log(JSON.stringify(build(input, output, backup), null, 2));
     } else throw Error('Usage: node src/patcher.mjs inspect INPUT | build INPUT OUTPUT BACKUPS');

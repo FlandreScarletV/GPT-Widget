@@ -1,4 +1,4 @@
-#requires -Version 7.0
+﻿#requires -Version 7.0
 [CmdletBinding()]
 param(
     [ValidateSet('Launch','LaunchPrepared','Prepare','Inspect','Restore','Enable','Paths','RememberPaths')]
@@ -162,7 +162,9 @@ try {
     if ($Mode -eq 'Inspect') { $inspection; return }
     $sourceHash = Hash $source
     $toolHash = Hash (Join-Path $PSScriptRoot 'src\status.mjs')
-    $patcherHash = (Hash $patcher).Substring(0,8) + (Hash (Join-Path $PSScriptRoot 'src\quit-copy.mjs')).Substring(0,8)
+    # Include all patch dependencies, not only the entry file: module fixes must invalidate reuse.
+    $dependencyText = (Get-ChildItem (Join-Path $PSScriptRoot 'src'),(Join-Path $PSScriptRoot 'experimental') -Filter '*.mjs' -File -Recurse | Sort-Object FullName | ForEach-Object { $_.FullName.Substring($PSScriptRoot.Length) + ':' + (Hash $_.FullName) }) -join "`n"
+    $patcherHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($dependencyText))).Substring(0,16).ToLowerInvariant()
     $runtimeKey = $inspection.version + '-' + $sourceHash.Substring(0,16) + '-' + $toolHash.Substring(0,8) + '-' + $patcherHash
     $runtime = Assert-InState (Join-Path $StateRoot ('runtimes\' + $runtimeKey))
     $target = Join-Path $runtime 'resources\app.asar'
@@ -173,11 +175,15 @@ try {
         $reusable = (Hash $target) -eq $expected
     }
     if (-not $reusable) {
+        try { $null = Invoke-Patcher @('check', $source) } catch {
+            $reason = $_.Exception.Message
+            @{status='待适配版本';reason=$reason;installRoot=$InstallRoot;time=(Get-Date).ToString('o')} | ConvertTo-Json | Set-Content (Join-Path $StateRoot 'last-check.json')
+            throw ('新版完整补丁检查失败，旧副本及当前记录保留。具体原因：' + $reason)
+        }
+        # Never move an existing runtime before the replacement has been validated.
         if (Test-Path -LiteralPath $runtime) {
-            Assert-Closed $runtime
-            # Keep interrupted or restored copies as evidence; don't delete or overwrite them.
-            $retained = Assert-InState ($runtime + '.retained-' + [guid]::NewGuid().ToString('N'))
-            Move-Item -LiteralPath $runtime -Destination $retained
+            $runtime = Assert-InState ($runtime + '-' + [guid]::NewGuid().ToString('N'))
+            $target = Join-Path $runtime 'resources\app.asar'
         }
         $stage = Assert-InState (Join-Path $StateRoot ('stage-' + [guid]::NewGuid().ToString('N')))
         $null = New-Item -ItemType Directory -Path $stage
