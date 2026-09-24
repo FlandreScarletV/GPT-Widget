@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import { deflateRawSync, constants } from 'node:zlib';
 import { createObserver } from './observer-proxy.mjs';
 import { frameObserver, modelObserver } from './websocket-observer.mjs';
 import { frame, accept, connect, until } from './websocket-test-helper.mjs';
@@ -78,7 +79,22 @@ test('compressed frames pass unchanged and produce no fabricated model',async t=
   await new Promise(r=>setTimeout(r,20));
   const bytes=frame(Buffer.from([170,174,5,0]),{compressed:true});peer.write(bytes);
   await until(()=>c.received.length>0);assert.deepEqual(Buffer.concat(c.received),bytes);
-  assert.equal(records.find(r=>r.kind==='turn').reportedModel,null);c.socket.destroy();
+  assert.equal(records.some(r=>r.kind==='turn' && r.reportedModel),false);c.socket.destroy();
+});
+
+test('negotiated compressed traffic stays byte-identical while model difference is observed',async t=>{
+  const zip=value=>deflateRawSync(Buffer.from(JSON.stringify(value)),{flush:constants.Z_SYNC_FLUSH,finishFlush:constants.Z_SYNC_FLUSH}).subarray(0,-4);
+  let peer;const sent=[];
+  const ext='permessage-deflate; client_no_context_takeover; server_no_context_takeover';
+  const {proxy,records}=await fixture(t,(req,socket)=>{peer=socket;accept(req,socket,{'sec-websocket-extensions':ext});socket.on('data',b=>sent.push(Buffer.from(b)));});
+  const c=await connect(proxy.baseUrl+'/responses',{'sec-websocket-extensions':ext});
+  const request=frame(zip({type:'response.create',model:'a',input:'PRIVATE'}),{compressed:true,mask:true});
+  c.socket.write(request);await until(()=>Buffer.concat(sent).length===request.length);
+  const response=frame(zip({type:'response.completed',response:{id:'resp_compressed',model:'b',output:'PRIVATE'}}),{compressed:true});
+  peer.write(response);await until(()=>records.some(r=>r.kind==='turn'));
+  assert.deepEqual(Buffer.concat(sent),request);assert.deepEqual(Buffer.concat(c.received),response);
+  assert.equal(records.find(r=>r.kind==='turn').reportedModel,'b');assert.equal(records.find(r=>r.kind==='turn').modelDifference,true);
+  assert.doesNotMatch(JSON.stringify(records),/PRIVATE/);c.socket.destroy();
 });
 test('upstream disconnect ends client connection and records incomplete turn',async t=>{
   let peer;const {proxy,records}=await fixture(t,(req,socket)=>{peer=socket;accept(req,socket);socket.once('data',()=>socket.destroy());});

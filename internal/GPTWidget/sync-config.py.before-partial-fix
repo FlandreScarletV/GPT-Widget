@@ -1,6 +1,5 @@
 import copy,json,os,pathlib,re,subprocess,sys,tomllib,datetime
 ROOTS=('marketplaces','plugins','mcp_servers','apps')
-HOST_MARKETS={'openai-bundled','openai-primary-runtime'}
 def scalar(v):
  if isinstance(v,bool):return str(v).lower()
  if isinstance(v,(int,float)):return str(v)
@@ -17,12 +16,7 @@ def table(keys,obj):
 def merge(source,target):
  src=tomllib.loads(source);dst=tomllib.loads(target);wanted=copy.deepcopy(dst)
  for root in ROOTS:
-  if root in src:
-   incoming=copy.deepcopy(src[root])
-   # Host-managed entries belong to the target runtime, not the source version.
-   if root=='marketplaces':incoming={k:v for k,v in incoming.items() if k not in HOST_MARKETS}
-   if root=='plugins':incoming={k:v for k,v in incoming.items() if k.rpartition('@')[2] not in HOST_MARKETS}
-   wanted.setdefault(root,{}).update(incoming)
+  if root in src:wanted.setdefault(root,{}).update(copy.deepcopy(src[root]))
  out=[];drop=False
  for line in target.splitlines():
   if re.match(r'^\s*\[',line):
@@ -51,17 +45,9 @@ def plan_plugins(config,source_inventory,target_inventory):
   for item in source_inventory.get('installed',[]):
    if item.get('installed') and item.get('enabled') and item.get('pluginId'):
     selectors.setdefault(item['pluginId'],{'enabled':True})
- selectors={k:v for k,v in selectors.items() if k.rpartition('@')[2] not in HOST_MARKETS}
  visible={x.get('pluginId') for x in (target_inventory or {}).get('available',[])+(target_inventory or {}).get('installed',[])}
  blocked=[k for k in selectors if selectors[k].get('enabled',True) and target_inventory is not None and k not in visible]
  return selectors,blocked
-
-def failure_reason(raw):
- text=raw.decode('utf-8',errors='replace').lower()
- if 'handshake' in text or 'client error (connect)' in text or 'error sending request' in text:return 'network_or_tls_error'
- if 'unauthorized' in text or '401' in text:return 'authentication_required'
- if 'forbidden' in text or '403' in text:return 'permission_denied'
- return 'install_failed'
 
 def run():
  source,target,cli=sys.argv[1:4];source=pathlib.Path(source).resolve();target=pathlib.Path(target).resolve()
@@ -72,7 +58,7 @@ def run():
  backup.write_text(before,encoding='utf-8')
  if file.read_text(encoding='utf-8-sig')!=before:raise ValueError('Configuration changed concurrently')
  tmp=file.with_suffix('.sync-tmp');tmp.write_text(after,encoding='utf-8');os.replace(tmp,file)
- env=os.environ.copy();env['CODEX_HOME']=str(target);failed=[];installed=[];reasons={}
+ env=os.environ.copy();env['CODEX_HOME']=str(target);failed=[];installed=[]
  source_inventory=inventory(cli,source);target_inventory=inventory(cli,target,True)
  selectors,blocked=plan_plugins(src.get('plugins',{}),source_inventory,target_inventory)
  for selector,settings in selectors.items():
@@ -85,10 +71,7 @@ def run():
   try:
    r=subprocess.run([cli,'plugin','add',selector,'--json'],env=env,capture_output=True,timeout=60)
    (installed if r.returncode==0 else failed).append(selector)
-   if r.returncode:reasons[selector]=failure_reason(r.stderr)
-  except subprocess.TimeoutExpired:failed.append(selector);reasons[selector]='timeout'
- print(json.dumps({'synced':{k:list(src.get(k,{})) for k in ROOTS},'installed':installed,'failed':failed,'notListedInTargetCatalog':blocked,'failureReasons':reasons,'hostManagedSkipped':sorted(HOST_MARKETS),'inventoryChecked':source_inventory is not None and target_inventory is not None,'privateChatCatalogStatus':'not_verified_by_cli','privateChatCatalogNote':'私人 Chat 插件入口由当前账号远程目录提供，本地同步不验证或复制该入口','backup':str(backup)},ensure_ascii=False))
- if failed or blocked or source_inventory is None or target_inventory is None:
-  print('本地配置已同步；部分插件待处理，不阻止副本启动。')
-  sys.exit(2)
+  except subprocess.TimeoutExpired:failed.append(selector)
+ print(json.dumps({'synced':{k:list(src.get(k,{})) for k in ROOTS},'installed':installed,'failed':failed,'notVisibleToTargetAccount':blocked,'inventoryChecked':source_inventory is not None and target_inventory is not None,'backup':str(backup)},ensure_ascii=False))
+ if failed or blocked or source_inventory is None or target_inventory is None:sys.exit(2)
 if __name__=='__main__':run()

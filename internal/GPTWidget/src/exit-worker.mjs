@@ -16,7 +16,8 @@ const logRoot=logDirectory||path.resolve(path.dirname(target),'../../../../..','
 const log=new RerouteLog(logRoot);
 const rerouteDirectory=path.join(path.dirname(logRoot),'reroute-inbox');fs.mkdirSync(rerouteDirectory,{recursive:true});
 let logError=null;
-function write(value){const data=JSON.stringify({...value,requestDirectory,rerouteDirectory,logError});if(Buffer.byteLength(data)>16384)throw Error('State too large');fs.writeFileSync(target+'.tmp',Buffer.concat([Buffer.from(data),Buffer.alloc(16384-Buffer.byteLength(data),32)]));fs.renameSync(target+'.tmp',target);}
+function readWorkState(){try{const file=path.resolve(path.dirname(target),'../..','inspector-work-state.json');if(fs.lstatSync(file).isSymbolicLink()||fs.statSync(file).size>12000)return null;const data=JSON.parse(fs.readFileSync(file,'utf8'));return data.schema===1&&data.alive&&Date.now()-data.updatedAt<=15000?data:null;}catch{return null}}
+function write(value){const data=JSON.stringify({...value,requestDirectory,rerouteDirectory,logError,workTelemetry:readWorkState()});if(Buffer.byteLength(data)>16384)throw Error('State too large');fs.writeFileSync(target+'.tmp',Buffer.concat([Buffer.from(data),Buffer.alloc(16384-Buffer.byteLength(data),32)]));fs.renameSync(target+'.tmp',target);}
 const session=new RefreshSession(async()=>{const inspector=new Inspector(fetch,Date.now,readQualityKey);await inspector.refresh();return {status:inspector.publicStatus(),details:inspector.uiDetails()}},write);
 let running=true;
 const watcher=setInterval(()=>{try{process.kill(Number(pid),0)}catch{running=false;write({});clearInterval(watcher);process.exit(0)}},5000);
@@ -24,4 +25,4 @@ void session.refresh();
 // Only local control-file polling. No timer initiates an internet query.
 setInterval(()=>{if(!running)return;const found=requests();for(const name of found)fs.unlinkSync(path.join(requestDirectory,name));if(found.length&&!session.pending)void session.refresh()},500);
 
-setInterval(()=>{if(!running)return;const before=logError;try{drainReroutes(rerouteDirectory,log);logError=null}catch{logError='write_failed'}if(before!==logError)write(session.state)},1000);
+setInterval(()=>{if(!running)return;try{drainReroutes(rerouteDirectory,log);logError=null}catch{logError='write_failed'}write(session.state)},1000);

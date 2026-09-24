@@ -202,6 +202,7 @@ try {
             version = $inspection.version; runtime = $runtime; backup = [IO.Path]::GetFullPath($report.backup)
             sourceSha256 = $sourceHash; patchedSha256 = $report.patchedSha256
             patchDisabled = [bool]$disabled; installRoot = $InstallRoot; desktopAcceptance = 'pending'
+            workTelemetry = [bool]$report.workTelemetry
         }
         Save-Manifest $current
     }
@@ -298,8 +299,9 @@ try {
         $python = Join-Path $env:USERPROFILE '.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe'
         if (-not (Test-Path $python)) { $python = (Get-Command python.exe -ErrorAction Stop).Source }
         & $python (Join-Path $PSScriptRoot 'sync-config.py') $workHome $data (Join-Path $runtime 'resources/codex.exe')
-        if ($LASTEXITCODE -ne 0) { throw '插件或工具同步有失败项；已保留配置备份，请查看上面的失败名称。' }
-        Write-Output '已同步插件、MCP 和本地 App 设置。App 登录授权需在副本账号完成。'
+        if ($LASTEXITCODE -eq 2) { Write-Warning '配置已同步，部分远程插件待处理；副本将继续启动。' }
+        elseif ($LASTEXITCODE -ne 0) { throw '配置同步失败，已停止启动；请检查配置备份。' }
+        Write-Output '配置同步处理结束；插件结果以上方报告为准。App 登录授权需在副本账号完成。'
     }
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = Join-Path $runtime 'ChatGPT.exe'
@@ -320,7 +322,15 @@ try {
     # Keep the app's normal close-to-tray and tray-menu quit behavior.
     $start.Environment['CMI_EXIT_ON_CLOSE'] = '0'
     $start.ArgumentList.Add('--user-data-dir=' + $profilePath)
-    $process = [Diagnostics.Process]::Start($start)
+    $workObserver=$null
+    if (-not $current.patchDisabled -and $current.workTelemetry) {
+        . (Join-Path $PSScriptRoot 'Start-WorkObserver.ps1')
+        $workObserver=Start-WidgetWorkObserver -Node $node -Runtime $runtime -StateRoot $StateRoot
+        $start.Environment['GPTWIDGET_OBSERVER_URL']=$workObserver.baseUrl
+    }
+    try { $process = [Diagnostics.Process]::Start($start) }
+    catch { if($workObserver -and -not $workObserver.process.HasExited){$workObserver.process.Kill()};throw }
+    if($workObserver){@{pid=$process.Id}|ConvertTo-Json -Compress|Set-Content -LiteralPath $workObserver.owner -Encoding utf8}
     if (-not $current.patchDisabled) {
         if (-not (Test-Path (Join-Path $env:LOCALAPPDATA 'CodexModelInspector\ipapi-is.key'))) {
             Write-Output '未配置 IP 质量服务，跳过完整风险检测；IP 地区查询仍可用。'

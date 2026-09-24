@@ -4,6 +4,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { Transform } from 'node:stream';
 import { StringDecoder } from 'node:string_decoder';
 import { frameObserver, modelObserver } from './websocket-observer.mjs';
+import { routingHeaders } from './routing-headers.mjs';
 
 const model = v => typeof v === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,159}$/.test(v) ? v : null;
 const hop = new Set(['connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailer', 'transfer-encoding', 'upgrade']);
@@ -55,7 +56,9 @@ function tee(capture) {
 }
 
 /** Experimental HTTP/SSE/WS. No config mutation, authentication lookup, or disk logging. */
-export async function createObserver({ upstream, onObservation = () => {}, allowLoopbackUpstream = false, idleTimeout = 120000 } = {}) {
+export async function createObserver({ upstream, onObservation = () => {}, onRequestStart = () => {}, onDiagnostic = () => {}, allowLoopbackUpstream = false, idleTimeout = 120000 } = {}) {
+  const diagnostic = value => { try { onDiagnostic(value); } catch {} };
+  const encoding = value => !value ? 'identity' : ['identity','gzip','deflate','br','zstd'].includes(value) ? value : 'other';
   const target = new URL(upstream);
   if (target.username || target.password || target.search || target.hash ||
       !(target.protocol === 'https:' || (allowLoopbackUpstream && target.protocol === 'http:' && target.hostname === '127.0.0.1'))) {
@@ -69,6 +72,9 @@ export async function createObserver({ upstream, onObservation = () => {}, allow
       res.writeHead(403).end(); return;
     }
     const state = { requestId: randomUUID(), requestedModel: null, evidence: [], statusCode: null, outcome: 'pending' };
+    diagnostic({kind:'http_request', encoding:encoding(req.headers['content-encoding'])});
+    // HTTP compression/association is not yet supported by the desktop state bridge.
+    try { onRequestStart({kind:'request-start',scope:null}); } catch {}
     let finished = false;
     function evidence(source, value) {
       const name = model(value);
@@ -103,6 +109,8 @@ export async function createObserver({ upstream, onObservation = () => {}, allow
     });
     out.on('response', incoming => {
       state.statusCode = incoming.statusCode;
+      state.routingHeaders = routingHeaders(incoming.headers);
+      diagnostic({kind:'http_response', statusCode:incoming.statusCode, encoding:encoding(incoming.headers['content-encoding'])});
       evidence('http.openai-model', incoming.headers['openai-model']);
       const compressed = incoming.headers['content-encoding'] && incoming.headers['content-encoding'] !== 'identity';
       const type = String(incoming.headers['content-type'] || '').toLowerCase();
@@ -121,9 +129,9 @@ export async function createObserver({ upstream, onObservation = () => {}, allow
       reject('403 Forbidden'); return;
     }
     socket.pause();
-    const observation = modelObserver(onObservation);
-    const clientFrames = frameObserver(v => observation.client(v), () => observation.opaque());
-    const serverFrames = frameObserver(v => observation.server(v), () => observation.opaque());
+    const observation = modelObserver(onObservation, onRequestStart);
+    const clientFrames = frameObserver(v => { diagnostic({direction:'client', kind:'json'}); observation.client(v); }, reason => { diagnostic({direction:'client', kind:reason}); observation.opaque(); }, 1024*1024, {onFrame: frame => diagnostic({direction:'client',kind:'frame',...frame})});
+    const serverFrames = frameObserver(v => { diagnostic({direction:'server', kind:'json'}); observation.server(v); }, reason => { diagnostic({direction:'server', kind:reason}); observation.opaque(); }, 1024*1024, {onFrame: frame => diagnostic({direction:'server',kind:'frame',...frame})});
     const transport = target.protocol === 'https:' ? https : http;
     const outHeaders = headers(req.headers);
     Object.assign(outHeaders, { host: target.host, connection: 'Upgrade', upgrade: 'websocket' });
@@ -157,7 +165,11 @@ export async function createObserver({ upstream, onObservation = () => {}, allow
       connected = true; peer = upstreamSocket; active.add(peer);
       peer.on('error', cleanup); peer.on('close', cleanup); peer.on('end', halfClose);
       socket.setTimeout(idleTimeout, cleanup); peer.setTimeout(idleTimeout, cleanup);
-      observation.handshake(incoming.headers['openai-model']);
+      const extensions=String(incoming.headers['sec-websocket-extensions']||'');
+      clientFrames.setExtensions(extensions,'client');
+      serverFrames.setExtensions(extensions,'server');
+      diagnostic({kind:'handshake', extensionsPresent:!!extensions, permessageDeflate:/(?:^|,)\s*permessage-deflate(?:;|,|$)/i.test(extensions), permessageZstd:/(?:^|,)\s*permessage-zstd(?:;|,|$)/i.test(extensions)});
+      observation.handshake(incoming.headers['openai-model'], routingHeaders(incoming.headers));
       // Preserve the upstream handshake fields, including accept, extensions and sticky state.
       const lines = [];
       for (let i = 0; i < incoming.rawHeaders.length; i += 2) lines.push(`${incoming.rawHeaders[i]}: ${incoming.rawHeaders[i + 1]}`);
