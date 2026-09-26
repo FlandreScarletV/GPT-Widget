@@ -18,6 +18,8 @@ stage-*/
 node_modules/
 *.key
 *.log
+__pycache__/
+*.pyc
 
 
 .DS_Store
