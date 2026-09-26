@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 function headerHash(filename) {
@@ -32,6 +34,7 @@ function resource(binary) {
     locations.push(offset);
     from = offset + prefix.length;
   }
+  if (locations.length === 0) return null;
   if (locations.length !== 1) throw Error(`Expected one ElectronAsar integrity resource; found ${locations.length}`);
   const valueOffset = locations[0] + prefix.length;
   const value = binary.subarray(valueOffset, valueOffset + 64).toString('ascii');
@@ -46,12 +49,15 @@ export function inspectIntegrity(sourceAsar, targetAsar, exePath) {
   const targetHeaderHash = headerHash(targetAsar);
   const binary = fs.readFileSync(exePath);
   const embedded = resource(binary);
-  return {sourceHeaderHash, targetHeaderHash, embeddedHeaderHash: embedded.value,
+  return {sourceHeaderHash, targetHeaderHash, resourcePresent: Boolean(embedded), embeddedHeaderHash: embedded?.value ?? null,
     executableSha256: sha256(binary)};
 }
 
 export function updateIntegrity(sourceAsar, targetAsar, exePath) {
   const info = inspectIntegrity(sourceAsar, targetAsar, exePath);
+  if (!info.resourcePresent) return {sourceExeSha256: info.executableSha256,
+    patchedExeSha256: info.executableSha256, sourceHeaderHash: info.sourceHeaderHash,
+    patchedHeaderHash: info.targetHeaderHash, integrityUpdated: false};
   if (info.embeddedHeaderHash !== info.sourceHeaderHash) {
     throw Error('Copied EXE does not match official ASAR header; refusing to modify it');
   }
@@ -66,14 +72,15 @@ export function updateIntegrity(sourceAsar, targetAsar, exePath) {
     if (checked.embeddedHeaderHash !== checked.targetHeaderHash) throw Error('Executable integrity update failed');
     fs.renameSync(staged, exePath);
     return {sourceExeSha256: info.executableSha256, patchedExeSha256: checked.executableSha256,
-      sourceHeaderHash: info.sourceHeaderHash, patchedHeaderHash: info.targetHeaderHash};
+      sourceHeaderHash: info.sourceHeaderHash, patchedHeaderHash: info.targetHeaderHash,
+      integrityUpdated: true};
   } catch (error) {
     fs.rmSync(staged, {force: true});
     throw error;
   }
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`).href) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const [mode, sourceAsar, targetAsar, exePath] = process.argv.slice(2);
     if (!sourceAsar || !targetAsar || !exePath || !['inspect', 'update'].includes(mode)) {

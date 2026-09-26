@@ -85,7 +85,7 @@ function Assert-InState([string]$value) {
     return $full
 }
 function Hash([string]$file) { return (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant() }
-function Invoke-Patcher([string[]]$PatcherArguments) {
+function Invoke-NodeJson([string]$ToolPath,[string[]]$ToolArguments) {
     $info = [Diagnostics.ProcessStartInfo]::new()
     $info.FileName = $node
     $info.UseShellExecute = $false
@@ -94,8 +94,8 @@ function Invoke-Patcher([string[]]$PatcherArguments) {
     $info.RedirectStandardError = $true
     $info.StandardOutputEncoding = [Text.Encoding]::UTF8
     $info.StandardErrorEncoding = [Text.Encoding]::UTF8
-    $info.ArgumentList.Add($patcher)
-    foreach ($argument in $PatcherArguments) { $info.ArgumentList.Add($argument) }
+    $info.ArgumentList.Add($ToolPath)
+    foreach ($argument in $ToolArguments) { $info.ArgumentList.Add($argument) }
     $child = [Diagnostics.Process]::Start($info)
     $outTask = $child.StandardOutput.ReadToEndAsync()
     $errTask = $child.StandardError.ReadToEndAsync()
@@ -103,13 +103,20 @@ function Invoke-Patcher([string[]]$PatcherArguments) {
     if ($child.ExitCode -ne 0) { throw $errTask.GetAwaiter().GetResult() }
     return $outTask.GetAwaiter().GetResult() | ConvertFrom-Json
 }
+function Invoke-Patcher([string[]]$PatcherArguments) {
+    return Invoke-NodeJson $patcher $PatcherArguments
+}
 function Assert-Closed([string]$app) {
     $exe = Join-Path $app 'ChatGPT.exe'
     $running = Get-Process ChatGPT -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe }
     if ($running) { throw '请先关闭副本再执行恢复或更新；官方 Codex 可以保持打开。' }
 }
 try {
-    Save-WidgetLocation $location
+    # A one-off explicit StateRoot (including isolated tests) must not replace
+    # the everyday launcher location. RememberPaths and the install chooser bind it.
+    if (-not $PSBoundParameters.ContainsKey('StateRoot') -or $Mode -eq 'RememberPaths' -or $ChooseInstallDirectory) {
+        Save-WidgetLocation $location
+    }
     if ($Mode -eq 'RememberPaths') { Write-Output ('已绑定已有副本：'+$StateRoot); return }
     $current = Read-Manifest
     if ($Mode -eq 'Restore') {
@@ -118,14 +125,27 @@ try {
         Assert-Closed $app
         $target = Join-Path $app 'resources\app.asar'
         $backup = Assert-InState $current.backup
+        $exe = Join-Path $app 'ChatGPT.exe'
         if ((Hash $backup) -ne $current.sourceSha256) { throw 'Original backup hash mismatch' }
         $existing = Hash $target
         if ($existing -notin @($current.patchedSha256, $current.sourceSha256)) { throw 'Unknown runtime changes; refusing restore' }
+        if ($current.backupExe) {
+            $exeBackup = Assert-InState $current.backupExe
+            if ((Hash $exeBackup) -ne $current.sourceExeSha256) { throw 'Original EXE backup hash mismatch' }
+            if ((Hash $exe) -notin @($current.patchedExeSha256,$current.sourceExeSha256)) { throw 'Unknown runtime EXE changes; refusing restore' }
+            $exeRestoreTemp = $exe + '.restore'
+            Copy-Item -LiteralPath $exeBackup -Destination $exeRestoreTemp
+            if ((Hash $exeRestoreTemp) -ne $current.sourceExeSha256) { throw 'EXE restore staging verification failed' }
+        }
         $restoreTemp = $target + '.restore'
         Copy-Item -LiteralPath $backup -Destination $restoreTemp
         if ((Hash $restoreTemp) -ne $current.sourceSha256) { throw 'Restore staging verification failed' }
         Move-Item -LiteralPath $restoreTemp -Destination $target -Force
         if ((Hash $target) -ne $current.sourceSha256) { throw 'Restore verification failed' }
+        if ($current.backupExe) {
+            Move-Item -LiteralPath $exeRestoreTemp -Destination $exe -Force
+            if ((Hash $exe) -ne $current.sourceExeSha256) { throw 'EXE restore verification failed' }
+        }
         $current.patchDisabled = $true
         Save-Manifest $current
         Write-Output '原文件已恢复并校验；自动补丁已停用。重新启用：-Mode Enable'
@@ -173,6 +193,10 @@ try {
     if ($reusable) {
         $expected = if ($disabled) { $current.sourceSha256 } else { $current.patchedSha256 }
         $reusable = (Hash $target) -eq $expected
+        if ($reusable -and $current.sourceExeSha256) {
+            $expectedExe = if ($disabled) { $current.sourceExeSha256 } else { $current.patchedExeSha256 }
+            $reusable = (Hash (Join-Path $runtime 'ChatGPT.exe')) -eq $expectedExe
+        }
     }
     if (-not $reusable) {
         try { $null = Invoke-Patcher @('check', $source) } catch {
@@ -195,18 +219,32 @@ try {
         }
         $candidate = Join-Path $stage 'resources\app.asar.inspector'
         $report = Invoke-Patcher @('build', $stagedAsar, $candidate, (Join-Path $StateRoot 'backups'))
+        $sourceExe = Join-Path $InstallRoot 'ChatGPT.exe'
+        $stagedExe = Join-Path $stage 'ChatGPT.exe'
+        $sourceExeHash = Hash $sourceExe
+        if ((Hash $stagedExe) -ne $sourceExeHash) { throw 'Codex executable changed during copy' }
+        $exeBackup = Assert-InState (Join-Path (Split-Path $report.backup) 'ChatGPT.exe')
+        if (-not (Test-Path -LiteralPath $exeBackup)) { Copy-Item -LiteralPath $stagedExe -Destination $exeBackup }
+        if ((Hash $exeBackup) -ne $sourceExeHash) { throw 'Original executable backup hash mismatch' }
+        $patchedExeHash = $sourceExeHash
         if (-not $disabled) {
             Move-Item -LiteralPath $candidate -Destination $stagedAsar -Force
             if ((Hash $stagedAsar) -ne $report.patchedSha256) {
                 Copy-Item -LiteralPath $report.backup -Destination $stagedAsar -Force
                 throw '补丁写入校验失败，已恢复 staging 原文件'
             }
+            $integrity = Invoke-NodeJson (Join-Path $PSScriptRoot 'src\asar-integrity.mjs') @('update',$report.backup,$stagedAsar,$stagedExe)
+            if ($integrity.sourceExeSha256 -ne $sourceExeHash -or (Hash $stagedExe) -ne $integrity.patchedExeSha256) {
+                throw '副本 EXE 完整性资源更新校验失败'
+            }
+            $patchedExeHash = $integrity.patchedExeSha256
         }
         $null = New-Item -ItemType Directory -Force -Path (Split-Path $runtime)
         Move-Item -LiteralPath $stage -Destination $runtime
         $current = [pscustomobject]@{
             version = $inspection.version; runtime = $runtime; backup = [IO.Path]::GetFullPath($report.backup)
             sourceSha256 = $sourceHash; patchedSha256 = $report.patchedSha256
+            backupExe = $exeBackup; sourceExeSha256 = $sourceExeHash; patchedExeSha256 = $patchedExeHash
             patchDisabled = [bool]$disabled; installRoot = $InstallRoot; desktopAcceptance = 'pending'
             workTelemetry = [bool]$report.workTelemetry
         }
@@ -218,6 +256,10 @@ try {
         $target = Join-Path $runtime 'resources\app.asar'
         $expected = if ($current.patchDisabled) { $current.sourceSha256 } else { $current.patchedSha256 }
         if ((Hash $target) -ne $expected) { throw '工作副本校验失败' }
+        if ($current.sourceExeSha256) {
+            $expectedExe = if ($current.patchDisabled) { $current.sourceExeSha256 } else { $current.patchedExeSha256 }
+            if ((Hash (Join-Path $runtime 'ChatGPT.exe')) -ne $expectedExe) { throw '工作副本 EXE 校验失败' }
+        }
     }
     Write-Output ("工作副本就绪: " + $runtime)
     if ($Mode -eq 'Prepare') { return }
@@ -356,12 +398,19 @@ try {
     if ($process.WaitForExit(5000) -and $process.ExitCode -ne 0) {
         Assert-Closed $runtime
         if ((Hash $current.backup) -ne $current.sourceSha256) { throw '启动失败，且备份校验失败，已停止自动恢复。' }
+        if ($current.backupExe -and (Hash $current.backupExe) -ne $current.sourceExeSha256) { throw '启动失败，且 EXE 备份校验失败，已停止自动恢复。' }
         Copy-Item -LiteralPath $current.backup -Destination ($target + '.restore')
         if ((Hash ($target + '.restore')) -ne $current.sourceSha256) { throw '恢复副本校验失败' }
+        if ($current.backupExe) {
+            $runtimeExe = Join-Path $runtime 'ChatGPT.exe'
+            Copy-Item -LiteralPath $current.backupExe -Destination ($runtimeExe + '.restore')
+            if ((Hash ($runtimeExe + '.restore')) -ne $current.sourceExeSha256) { throw '恢复副本 EXE 校验失败' }
+        }
         Move-Item -LiteralPath ($target + '.restore') -Destination $target -Force
+        if ($current.backupExe) { Move-Item -LiteralPath ($runtimeExe + '.restore') -Destination $runtimeExe -Force }
         $current.patchDisabled = $true
         Save-Manifest $current
-        throw '副本启动异常，已恢复官方原资源并停用补丁。'
+        throw ('副本启动异常（退出码 '+$process.ExitCode+'），已恢复官方原资源并停用补丁。')
     }
     $visibleProcesses = @(Get-Process ChatGPT -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $start.FileName })
     if ($visibleProcesses.Count) {

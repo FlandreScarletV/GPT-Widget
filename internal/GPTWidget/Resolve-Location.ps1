@@ -30,8 +30,10 @@ function Resolve-WidgetLocation {
         # Locate the same runtime and backup within the state tree after a move.
         $runtime=Join-Path $path ('runtimes/'+[IO.Path]::GetFileName($m.runtime.TrimEnd('\','/')))
         $backup=Join-Path $path ('backups/'+[IO.Path]::GetFileName([IO.Path]::GetDirectoryName($m.backup))+'/app.asar')
+        $backupExe=if($m.backupExe){Join-Path (Split-Path $backup) ([IO.Path]::GetFileName($m.backupExe))}else{$null}
         if(-not(Test-Path -LiteralPath (Join-Path $runtime 'ChatGPT.exe')) -or -not(Test-Path -LiteralPath (Join-Path $runtime 'resources/app.asar')) -or -not(Test-Path -LiteralPath $backup)){return $null}
-        [pscustomobject]@{StateRoot=$path;Runtime=$runtime;Backup=$backup;Manifest=$m;OldState=[IO.Path]::GetDirectoryName([IO.Path]::GetDirectoryName($m.runtime));Source='';PackageRoot=$PackageRoot}
+        if($backupExe -and (-not(Test-Path -LiteralPath $backupExe) -or ($m.sourceExeSha256 -and (Get-FileHash -LiteralPath $backupExe).Hash -ne $m.sourceExeSha256))){return $null}
+        [pscustomobject]@{StateRoot=$path;Runtime=$runtime;Backup=$backup;BackupExe=$backupExe;Manifest=$m;OldState=[IO.Path]::GetDirectoryName([IO.Path]::GetDirectoryName($m.runtime));Source='';PackageRoot=$PackageRoot}
     }
     if($ExplicitRoot){$root=[IO.Path]::GetFullPath($ExplicitRoot);$found=Candidate $root;if($found){$found.Source='explicit';return $found};return [pscustomobject]@{StateRoot=$root;Manifest=$null;Source='explicit-new';PackageRoot=$PackageRoot}}
     # Portable local data wins over old machine-wide records.
@@ -64,10 +66,11 @@ function Save-WidgetLocation {
     $root=$Location.StateRoot
     if($Location.Manifest){
         $m=$Location.Manifest
-        if($m.runtime -ne $Location.Runtime -or $m.backup -ne $Location.Backup){
+        if($m.runtime -ne $Location.Runtime -or $m.backup -ne $Location.Backup -or ($m.backupExe -and $m.backupExe -ne $Location.BackupExe)){
             $file=Join-Path $root 'current.json'
             Copy-Item -LiteralPath $file -Destination ($file+'.before-relocation-'+[guid]::NewGuid().ToString('N'))
             $m.runtime=$Location.Runtime;$m.backup=$Location.Backup
+            if($m.backupExe){$m.backupExe=$Location.BackupExe}
             $m|ConvertTo-Json -Depth 12|Set-Content -LiteralPath ($file+'.relocation-tmp')
             Move-Item -LiteralPath ($file+'.relocation-tmp') -Destination $file -Force
         }
