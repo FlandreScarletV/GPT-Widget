@@ -42,14 +42,14 @@ export function mergeDailyObserver(bytes){
  replace('onFocus:details?()=>setHover(true):undefined','onFocus:details?showDetails:undefined');
  replace("lines.map((line,i)=>h('div',{key:i},line))", "(detailType==='model'?chatDisplay.lines:lines).map((line,i)=>h('div',{key:i},line))");
  source=source.replace(baseline,ui);
- const contexts=[...source.matchAll(/root:([\w$]+),selection:\{model:([\w$]+)\.slug,reasoning_effort:\2\.thinkingEffort\?\?`即时`,provider:`OpenAI`\}/g)];
+ const contexts=[...source.matchAll(/,selection:\{model:([\w$]+)\.slug,reasoning_effort:\1\.thinkingEffort\?\?`即时`,provider:`OpenAI`\}/g)];
  if(contexts.length!==1)throw Error('Expected one Chat widget binding');
  const ctx=contexts[0];
  const begin=[...source.slice(0,ctx.index).matchAll(/function ([\w$]+)\(e\)\{/g)].at(-1)?.index;
  const body=source.slice(begin,ctx.index);
  const conv=body.match(/conversationId:([\w$]+)/)?.[1];
- if(!conv||!body.includes('selectedModel:'+ctx[2])||!body.includes('kind:`chatgpt`'))throw Error('Chat context not proven');
- source=source.slice(0,ctx.index)+ctx[0].replace('root:'+ctx[1]+',','root:'+ctx[1]+',isChat:true,chatConversationId:'+conv+',')+source.slice(ctx.index+ctx[0].length);
+ if(!conv||!body.includes('selectedModel:'+ctx[1])||!body.includes('kind:`chatgpt`')||!body.includes('__CMICreate('))throw Error('Chat context not proven');
+ source=source.slice(0,ctx.index)+',isChat:true,chatConversationId:'+conv+ctx[0]+source.slice(ctx.index+ctx[0].length);
  const checked=spawnSync(process.execPath,['--input-type=module','--check'],{input:source,encoding:'utf8'});if(checked.status!==0)throw Error(checked.stderr);
  const withUI=replaceFile(bytes,name,Buffer.from(source));
  const result=patchChatObserver(withUI,null,{daily:true});

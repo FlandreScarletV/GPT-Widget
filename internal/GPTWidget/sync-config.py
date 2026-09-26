@@ -1,6 +1,9 @@
 import copy,json,os,pathlib,re,subprocess,sys,tomllib,datetime
 ROOTS=('marketplaces','plugins','mcp_servers','apps')
 HOST_MARKETS={'openai-bundled','openai-primary-runtime'}
+# These executables are supplied by each desktop runtime; copying their paths
+# from another installation can leave the target pointing at an old version.
+RUNTIME_MCPS={'node_repl','cua_repl'}
 def scalar(v):
  if isinstance(v,bool):return str(v).lower()
  if isinstance(v,(int,float)):return str(v)
@@ -14,11 +17,16 @@ def table(keys,obj):
  for k,v in obj.items():
   if isinstance(v,dict):out+=table(keys+[k],v)
  return out+['']
-def merge(source,target):
+def merge(source,target,work_only=False):
  src=tomllib.loads(source);dst=tomllib.loads(target);wanted=copy.deepcopy(dst)
- for root in ROOTS:
+ roots=('mcp_servers',) if work_only else ROOTS
+ for root in roots:
   if root in src:
    incoming=copy.deepcopy(src[root])
+   if work_only:
+    # Keep the target's chosen tools and private Chat integrations. Update
+    # only shared local tools already enabled in this copy.
+    incoming={k:v for k,v in incoming.items() if k in dst.get(root,{}) and k not in RUNTIME_MCPS}
    # Host-managed entries belong to the target runtime, not the source version.
    if root=='marketplaces':incoming={k:v for k,v in incoming.items() if k not in HOST_MARKETS}
    if root=='plugins':incoming={k:v for k,v in incoming.items() if k.rpartition('@')[2] not in HOST_MARKETS}
@@ -28,9 +36,9 @@ def merge(source,target):
   if re.match(r'^\s*\[',line):
    try:key=next(iter(tomllib.loads(line)))
    except Exception:key=None
-   drop=key in ROOTS
+   drop=key in roots
   if not drop:out.append(line)
- for root in ROOTS:
+ for root in roots:
   if root in wanted:out+=table([root],wanted[root])
  result='\n'.join(out)+'\n'
  if tomllib.loads(result)!=wanted:raise ValueError('Unsupported configuration layout; original unchanged')
@@ -64,14 +72,19 @@ def failure_reason(raw):
  return 'install_failed'
 
 def run():
- source,target,cli=sys.argv[1:4];source=pathlib.Path(source).resolve();target=pathlib.Path(target).resolve()
+ source,target,cli=sys.argv[1:4];work_only='--work-only' in sys.argv[4:]
+ source=pathlib.Path(source).resolve();target=pathlib.Path(target).resolve()
  if source==target:raise ValueError('Source and target must differ')
  file=target/'config.toml';before=file.read_text(encoding='utf-8-sig')
- after,src=merge((source/'config.toml').read_text(encoding='utf-8-sig'),before)
+ after,src=merge((source/'config.toml').read_text(encoding='utf-8-sig'),before,work_only)
  backup=file.with_name('config.toml.before-data-sync-'+datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
  backup.write_text(before,encoding='utf-8')
  if file.read_text(encoding='utf-8-sig')!=before:raise ValueError('Configuration changed concurrently')
  tmp=file.with_suffix('.sync-tmp');tmp.write_text(after,encoding='utf-8');os.replace(tmp,file)
+ if work_only:
+  updated=sorted(set(src.get('mcp_servers',{})) & set(tomllib.loads(before).get('mcp_servers',{})) - RUNTIME_MCPS)
+  print(json.dumps({'mode':'codex-work','updatedLocalTools':updated,'remotePlugins':'not_synced','privateChatApps':'not_synced','backup':str(backup)},ensure_ascii=False))
+  return
  env=os.environ.copy();env['CODEX_HOME']=str(target);failed=[];installed=[];reasons={}
  source_inventory=inventory(cli,source);target_inventory=inventory(cli,target,True)
  selectors,blocked=plan_plugins(src.get('plugins',{}),source_inventory,target_inventory)
