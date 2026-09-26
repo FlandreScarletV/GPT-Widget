@@ -102,23 +102,9 @@ export function patch(original) {
   const chatJsx = match(chat.text,/\(0,([\w$]+)\.jsxs?\)/,'chat JSX')[1];
   // The header slot has its own horizontal inset. Insert at the outer provider
   // instead so the bar and form participate in the same full-width layout.
-  const selection='{model:'+selected+'.slug,reasoning_effort:'+selected+'.thinkingEffort??`即时`,provider:`OpenAI`}';
-  let chatBody;
-  const chatReturn=chat.text.match(/,([\w$]+)\}$/)?.[1];
-  if (chatReturn) {
-    // Older bundles cache the provider JSX in a local before returning it.
-    const header=',(0,'+chatJsx+'.jsx)((__CMIFrame??=__CMICreate('+chatReact+')),{root:'+chatReturn+',selection:'+selection+'})}';
-    chatBody=chat.text.slice(0,-(chatReturn.length+2))+header;
-  } else {
-    // Newer bundles return the provider JSX directly. Keep that whole
-    // expression intact and wrap only the final returned component.
-    const lastReturn=chat.text.lastIndexOf('return ');
-    const rootStart=Math.max(chat.text.lastIndexOf(',(0,'+chatJsx+'.jsx)('),chat.text.lastIndexOf(',(0,'+chatJsx+'.jsxs)('));
-    if (lastReturn<0 || rootStart<=lastReturn || !chat.text.endsWith('})}')) throw Error('待适配版本: chat return structure');
-    const rootExpression=chat.text.slice(rootStart+1,-1);
-    if (!/^\(0,[\w$]+\.jsxs?\)\(/.test(rootExpression) || !rootExpression.endsWith('})')) throw Error('待适配版本: chat provider expression');
-    chatBody=chat.text.slice(0,rootStart)+',(0,'+chatJsx+'.jsx)((__CMIFrame??=__CMICreate('+chatReact+')),{root:'+rootExpression+',selection:'+selection+'})}';
-  }
+  const chatReturn=match(chat.text,/,([\w$]+)\}$/,'chat return')[1];
+  const header=',(0,'+chatJsx+'.jsx)((__CMIFrame??=__CMICreate('+chatReact+')),{root:'+chatReturn+',selection:{model:'+selected+'.slug,reasoning_effort:'+selected+'.thinkingEffort??`即时`,provider:`OpenAI`}})}';
+  const chatBody=chat.text.slice(0,-(chatReturn.length+2))+header;
   source=source.slice(0,chat.start)+chatBody+source.slice(chat.start+chat.text.length);
   const check = spawnSync(process.execPath, ['--input-type=module', '--check'], {input: source, encoding: 'utf8'});
   if (check.status !== 0) throw Error('Patched JavaScript syntax failed: ' + check.stderr);

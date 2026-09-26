@@ -304,10 +304,10 @@ try {
     if ($ChooseDataDirectory) {
         $python = Join-Path $env:USERPROFILE '.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe'
         if (-not (Test-Path $python)) { $python = (Get-Command python.exe -ErrorAction Stop).Source }
-        & $python (Join-Path $PSScriptRoot 'sync-config.py') $workHome $data (Join-Path $runtime 'resources/codex.exe') --work-only
+        & $python (Join-Path $PSScriptRoot 'sync-config.py') $workHome $data (Join-Path $runtime 'resources/codex.exe')
         if ($LASTEXITCODE -eq 2) { Write-Warning '配置已同步，部分远程插件待处理；副本将继续启动。' }
         elseif ($LASTEXITCODE -ne 0) { throw '配置同步失败，已停止启动；请检查配置备份。' }
-        Write-Output 'Codex 工作配置同步完成；远程插件和 Chat App 授权不参与本次同步。'
+        Write-Output '配置同步处理结束；插件结果以上方报告为准。App 登录授权需在副本账号完成。'
     }
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = Join-Path $runtime 'ChatGPT.exe'
